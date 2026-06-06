@@ -11,6 +11,7 @@
                 <li><a th:href="@{/vehicle}">车辆管理</a></li>
                 <li><a th:href="@{/freight}">运价配置</a></li>
                 <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/order/stats}">里程统计</a></li>
                 <li><a th:href="@{/salary}">薪资管理</a></li>
             </ul>
         </div>
@@ -42,7 +43,74 @@
                         <div class="stat-number" th:text="${pendingOrderCount}">0</div>
                         <div class="stat-label">待接单</div>
                     </div>
+                    <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='/order/stats'">
+                        <div class="stat-number" style="color: #52c41a;" th:text="${#numbers.formatDecimal(monthTotalMileage, 1, 2)}">0</div>
+                        <div class="stat-label">本月总里程(公里) <span style="font-size: 12px;">→</span></div>
+                    </div>
+                    <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='/order/stats'">
+                        <div class="stat-number" style="color: #fa8c16;" th:text="${monthOrderCount}">0</div>
+                        <div class="stat-label">本月完成订单 <span style="font-size: 12px;">→</span></div>
+                    </div>
                 </div>
+
+                <div class="card">
+                    <div class="toolbar">
+                        <h3 style="margin: 0;">🏆 本月里程排行榜 <span style="font-size: 14px; color: #999; font-weight: normal;" th:text="'(' + ${currentMonth} + ')'"></span></h3>
+                        <a th:href="@{/order/stats}" class="btn btn-sm btn-primary">查看全部 →</a>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>司机编号</th>
+                                <th>司机姓名</th>
+                                <th>订单数</th>
+                                <th>总里程(公里)</th>
+                                <th>司机收入</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="driver, iterStat : ${topDrivers}">
+                                <td>
+                                    <span th:if="${iterStat.index == 0}" class="badge badge-gold">🥇 第1名</span>
+                                    <span th:if="${iterStat.index == 1}" class="badge badge-silver">🥈 第2名</span>
+                                    <span th:if="${iterStat.index == 2}" class="badge badge-bronze">🥉 第3名</span>
+                                </td>
+                                <td th:text="${driver.driverNo}"></td>
+                                <td th:text="${driver.driverName}"></td>
+                                <td th:text="${driver.orderCount}"></td>
+                                <td th:text="${#numbers.formatDecimal(driver.totalMileage, 1, 2)}"></td>
+                                <td style="color: #52c41a; font-weight: bold;" th:text="'¥' + ${#numbers.formatDecimal(driver.totalIncome, 1, 2)}"></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(topDrivers)}">
+                                <td colspan="6" style="text-align: center; color: #999;">本月暂无完成订单</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>快捷入口</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+                        <a th:href="@{/order/add}" class="stat-card" style="text-decoration: none; display: block;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">📦</div>
+                            <div class="stat-label" style="color: #333; font-weight: 500;">创建订单</div>
+                        </a>
+                        <a th:href="@{/order/stats}" class="stat-card" style="text-decoration: none; display: block;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">📊</div>
+                            <div class="stat-label" style="color: #333; font-weight: 500;">里程统计</div>
+                        </a>
+                        <a th:href="@{/freight}" class="stat-card" style="text-decoration: none; display: block;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">💰</div>
+                            <div class="stat-label" style="color: #333; font-weight: 500;">运价配置</div>
+                        </a>
+                        <a th:href="@{/driver}" class="stat-card" style="text-decoration: none; display: block;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">👥</div>
+                            <div class="stat-label" style="color: #333; font-weight: 500;">司机管理</div>
+                        </a>
+                    </div>
+                </div>
+
                 <div class="card">
                     <h3>系统说明</h3>
                     <div style="color: #666; line-height: 1.8;">
@@ -50,8 +118,9 @@
                         <ul style="margin-left: 20px; margin-top: 10px;">
                             <li><strong>司机管理</strong>：管理司机信息，包括基本信息、驾照信息、底薪等</li>
                             <li><strong>车辆管理</strong>：管理车辆信息，包括车牌号、车型、载重、关联司机等</li>
-                            <li><strong>运价配置</strong>：配置不同车型的运价规则，包括起步价、里程价、等候费等</li>
-                            <li><strong>订单管理</strong>：订单全流程管理，包括创建订单、接单、到达、完成、取消等</li>
+                            <li><strong>运价配置</strong>：配置不同车型的运价规则，包括起步价、里程价、等候费、时段加价等</li>
+                            <li><strong>订单管理</strong>：订单全流程管理，支持按车型、里程、时段、附加费自动计费</li>
+                            <li><strong>里程统计</strong>：员工里程统计看板，支持多维度排序和排行榜展示</li>
                             <li><strong>薪资管理</strong>：自动核算司机薪资，包括底薪、订单提成、奖金等</li>
                         </ul>
                     </div>
