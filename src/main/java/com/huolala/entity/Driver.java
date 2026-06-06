@@ -1,6 +1,7 @@
 package com.huolala.entity;
 
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -28,6 +29,7 @@ public class Driver {
 
     private String licenseType;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate licenseExpireDate;
 
     private String address;

@@ -1,6 +1,7 @@
 package com.huolala.entity;
 
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,12 +25,15 @@ public class Vehicle {
 
     private String color;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate registerDate;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate inspectExpireDate;
 
     private String insuranceNo;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate insuranceExpireDate;
 
     private Double loadCapacity;

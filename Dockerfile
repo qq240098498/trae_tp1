@@ -1,7 +1,7 @@
 FROM maven:3.8.4-jdk-8 AS builder
 WORKDIR /app
+COPY settings.xml /usr/share/maven/conf/settings.xml
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests
 
