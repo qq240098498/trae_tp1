@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司机管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}" class="active">司机管理</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">司机管理</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="toolbar">
+                        <h3 style="margin: 0;">司机列表</h3>
+                        <a th:href="@{/driver/add}" class="btn btn-primary">+ 新增司机</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>司机编号</th>
+                                <th>姓名</th>
+                                <th>手机号</th>
+                                <th>驾照类型</th>
+                                <th>底薪</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="driver : ${drivers}">
+                                <td th:text="${driver.driverNo}"></td>
+                                <td th:text="${driver.name}"></td>
+                                <td th:text="${driver.phone}"></td>
+                                <td th:text="${driver.licenseType}"></td>
+                                <td th:text="${driver.baseSalary}"></td>
+                                <td>
+                                    <span th:class="${driver.status == 1 ? 'status-badge status-4' : 'status-badge status-9'}"
+                                          th:text="${driver.status == 1 ? '在职' : '离职'}"></span>
+                                </td>
+                                <td th:text="${#temporals.format(driver.createTime, 'yyyy-MM-dd HH:mm')}"></td>
+                                <td>
+                                    <a th:href="@{/driver/edit/{id}(id=${driver.id})}" class="btn btn-sm btn-primary">编辑</a>
+                                    <a th:href="@{/driver/delete/{id}(id=${driver.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除吗？')">删除</a>
+                                </td>
+                            </tr>
+                            <tr th:if="${drivers.isEmpty()}">
+                                <td colspan="8" style="text-align: center; color: #999;">暂无数据</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

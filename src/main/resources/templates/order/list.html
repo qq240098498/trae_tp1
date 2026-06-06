@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}" class="active">订单管理</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">订单管理</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="toolbar">
+                        <h3 style="margin: 0;">订单列表</h3>
+                        <a th:href="@{/order/add}" class="btn btn-primary">+ 新增订单</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>订单号</th>
+                                <th>客户</th>
+                                <th>车型</th>
+                                <th>里程(公里)</th>
+                                <th>总金额</th>
+                                <th>司机</th>
+                                <th>状态</th>
+                                <th>下单时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${orders}">
+                                <td th:text="${order.orderNo}"></td>
+                                <td th:text="${order.customerName}"></td>
+                                <td th:text="${order.vehicleType}"></td>
+                                <td th:text="${order.distance}"></td>
+                                <td th:text="${order.totalAmount}"></td>
+                                <td th:text="${order.driver != null ? order.driver.name : '未分配'}"></td>
+                                <td>
+                                    <span th:class="'status-badge status-' + ${order.status}">
+                                        <span th:if="${order.status == 0}">待接单</span>
+                                        <span th:if="${order.status == 1}">已接单</span>
+                                        <span th:if="${order.status == 2}">已到达</span>
+                                        <span th:if="${order.status == 4}">已完成</span>
+                                        <span th:if="${order.status == 9}">已取消</span>
+                                    </span>
+                                </td>
+                                <td th:text="${#temporals.format(order.orderTime, 'yyyy-MM-dd HH:mm')}"></td>
+                                <td>
+                                    <a th:href="@{/order/detail/{id}(id=${order.id})}" class="btn btn-sm btn-primary">详情</a>
+                                </td>
+                            </tr>
+                            <tr th:if="${orders.isEmpty()}">
+                                <td colspan="9" style="text-align: center; color: #999;">暂无数据</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

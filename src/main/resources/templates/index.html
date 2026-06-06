@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head('控制台')"></head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}" class="active">控制台</a></li>
+                <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">控制台</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${driverCount}">0</div>
+                        <div class="stat-label">司机总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${vehicleCount}">0</div>
+                        <div class="stat-label">车辆总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${orderCount}">0</div>
+                        <div class="stat-label">订单总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${pendingOrderCount}">0</div>
+                        <div class="stat-label">待接单</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>系统说明</h3>
+                    <div style="color: #666; line-height: 1.8;">
+                        <p>欢迎使用货拉拉Web管理系统，本系统包含以下功能模块：</p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li><strong>司机管理</strong>：管理司机信息，包括基本信息、驾照信息、底薪等</li>
+                            <li><strong>车辆管理</strong>：管理车辆信息，包括车牌号、车型、载重、关联司机等</li>
+                            <li><strong>运价配置</strong>：配置不同车型的运价规则，包括起步价、里程价、等候费等</li>
+                            <li><strong>订单管理</strong>：订单全流程管理，包括创建订单、接单、到达、完成、取消等</li>
+                            <li><strong>薪资管理</strong>：自动核算司机薪资，包括底薪、订单提成、奖金等</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

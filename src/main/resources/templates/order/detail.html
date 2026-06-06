@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单详情</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}" class="active">订单管理</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">订单详情</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div th:if="${error}" class="error" th:text="${error}"></div>
+                <div class="card">
+                    <h3>订单信息</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>订单号：</label>
+                            <span class="value" th:text="${order.orderNo}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>状态：</label>
+                            <span class="value">
+                                <span th:class="'status-badge status-' + ${order.status}">
+                                    <span th:if="${order.status == 0}">待接单</span>
+                                    <span th:if="${order.status == 1}">已接单</span>
+                                    <span th:if="${order.status == 2}">已到达</span>
+                                    <span th:if="${order.status == 4}">已完成</span>
+                                    <span th:if="${order.status == 9}">已取消</span>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <label>客户姓名：</label>
+                            <span class="value" th:text="${order.customerName}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>客户电话：</label>
+                            <span class="value" th:text="${order.customerPhone}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>车型：</label>
+                            <span class="value" th:text="${order.vehicleType}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>里程：</label>
+                            <span class="value" th:text="${order.distance} + ' 公里'"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>起始地址：</label>
+                            <span class="value" th:text="${order.startAddress}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>目的地址：</label>
+                            <span class="value" th:text="${order.endAddress}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>费用信息</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>运费：</label>
+                            <span class="value" th:text="'¥' + ${order.freight}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>搬运费：</label>
+                            <span class="value" th:text="'¥' + ${order.carryFee}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>等候费：</label>
+                            <span class="value" th:text="'¥' + ${order.waitFee} + ' (' + ${order.waitMinutes} + '分钟)'"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>总金额：</label>
+                            <span class="value" style="color: #ff4d4f; font-weight: bold;" th:text="'¥' + ${order.totalAmount}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>司机收入：</label>
+                            <span class="value" style="color: #52c41a; font-weight: bold;" th:text="'¥' + ${order.driverIncome}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>司机车辆信息</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>司机：</label>
+                            <span class="value" th:text="${order.driver != null ? order.driver.name : '未分配'}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>车辆：</label>
+                            <span class="value" th:text="${order.vehicle != null ? order.vehicle.plateNo : '未分配'}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>流程时间</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>下单时间：</label>
+                            <span class="value" th:text="${order.orderTime != null ? #temporals.format(order.orderTime, 'yyyy-MM-dd HH:mm:ss') : '-'}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>接单时间：</label>
+                            <span class="value" th:text="${order.acceptTime != null ? #temporals.format(order.acceptTime, 'yyyy-MM-dd HH:mm:ss') : '-'}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>到达时间：</label>
+                            <span class="value" th:text="${order.arriveTime != null ? #temporals.format(order.arriveTime, 'yyyy-MM-dd HH:mm:ss') : '-'}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>完成时间：</label>
+                            <span class="value" th:text="${order.completeTime != null ? #temporals.format(order.completeTime, 'yyyy-MM-dd HH:mm:ss') : '-'}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>操作</h3>
+                    <div th:if="${order.status == 0}">
+                        <form th:action="@{/order/accept/{id}(id=${order.id})}" method="post">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>选择司机</label>
+                                    <select name="driverId" required>
+                                        <option value="">请选择司机</option>
+                                        <option th:each="d : ${drivers}" th:value="${d.id}" th:text="${d.name}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>选择车辆</label>
+                                    <select name="vehicleId" required>
+                                        <option value="">请选择车辆</option>
+                                        <option th:each="v : ${vehicles}" th:value="${v.id}" th:text="${v.plateNo + ' - ' + v.vehicleType}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="actions">
+                                <button type="submit" class="btn btn-success">确认接单</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div th:if="${order.status == 1}">
+                        <form th:action="@{/order/arrive/{id}(id=${order.id})}" method="post">
+                            <div class="actions">
+                                <button type="submit" class="btn btn-success">确认到达</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div th:if="${order.status == 2}">
+                        <form th:action="@{/order/complete/{id}(id=${order.id})}" method="post">
+                            <div class="form-group">
+                                <label>等候时间(分钟)</label>
+                                <input type="number" name="waitMinutes" placeholder="请输入等候时间，没有则填0">
+                            </div>
+                            <div class="actions">
+                                <button type="submit" class="btn btn-success">完成订单</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div th:if="${order.status != 4 and order.status != 9}">
+                        <form th:action="@{/order/cancel/{id}(id=${order.id})}" method="post">
+                            <div class="actions">
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('确定取消订单吗？')">取消订单</button>
+                                <a th:href="@{/order}" class="btn btn-warning">返回列表</a>
+                            </div>
+                        </form>
+                    </div>
+                    <div th:if="${order.status == 4 or order.status == 9}">
+                        <div class="actions">
+                            <a th:href="@{/order}" class="btn btn-warning">返回列表</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

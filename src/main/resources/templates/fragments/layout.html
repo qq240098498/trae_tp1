@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">货拉拉管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}" th:classappend="${#request.requestURI == '/' ? 'active' : ''}">控制台</a></li>
+                <li><a th:href="@{/driver}" th:classappend="${#request.requestURI.startsWith('/driver') ? 'active' : ''}">司机管理</a></li>
+                <li><a th:href="@{/vehicle}" th:classappend="${#request.requestURI.startsWith('/vehicle') ? 'active' : ''}">车辆管理</a></li>
+                <li><a th:href="@{/freight}" th:classappend="${#request.requestURI.startsWith('/freight') ? 'active' : ''}">运价配置</a></li>
+                <li><a th:href="@{/order}" th:classappend="${#request.requestURI.startsWith('/order') ? 'active' : ''}">订单管理</a></li>
+                <li><a th:href="@{/salary}" th:classappend="${#request.requestURI.startsWith('/salary') ? 'active' : ''}">薪资管理</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;" th:text="${title}">控制台</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content" th:fragment="content">
+            </div>
+        </div>
+    </div>
+</body>
+</html>

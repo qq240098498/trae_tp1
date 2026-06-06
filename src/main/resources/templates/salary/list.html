@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>薪资管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/salary}" class="active">薪资管理</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">薪资管理</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="toolbar">
+                        <h3 style="margin: 0;">薪资列表 - <span th:text="${month}"></span></h3>
+                        <div style="display: flex; gap: 10px;">
+                            <form th:action="@{/salary}" method="get" style="display: flex; gap: 10px;">
+                                <input type="month" name="month" th:value="${month}" class="form-control" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                <button type="submit" class="btn btn-primary">查询</button>
+                            </form>
+                            <form th:action="@{/salary/batchCalculate}" method="post">
+                                <input type="hidden" name="month" th:value="${month}">
+                                <button type="submit" class="btn btn-success" onclick="return confirm('确定批量核算所有司机薪资吗？')">批量核算</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <form th:action="@{/salary/calculate}" method="post" style="display: flex; gap: 10px; align-items: flex-end;">
+                            <input type="hidden" name="month" th:value="${month}">
+                            <div style="flex: 1;">
+                                <label>单个核算 - 选择司机</label>
+                                <select name="driverId" class="form-control" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                    <option value="">请选择司机</option>
+                                    <option th:each="d : ${drivers}" th:value="${d.id}" th:text="${d.driverNo + ' - ' + d.name}"></option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">核算薪资</button>
+                        </form>
+                    </div>
+                    <div th:if="${error}" class="error" th:text="${error}"></div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>司机编号</th>
+                                <th>司机姓名</th>
+                                <th>订单数</th>
+                                <th>底薪</th>
+                                <th>订单提成</th>
+                                <th>奖金</th>
+                                <th>扣款</th>
+                                <th>实发工资</th>
+                                <th>月份</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="salary : ${salaries}">
+                                <td th:text="${salary.driver.driverNo}"></td>
+                                <td th:text="${salary.driver.name}"></td>
+                                <td th:text="${salary.orderCount}"></td>
+                                <td th:text="${salary.baseSalary}"></td>
+                                <td th:text="${salary.orderIncome}"></td>
+                                <td th:text="${salary.bonus}"></td>
+                                <td th:text="${salary.deduction}"></td>
+                                <td style="color: #ff4d4f; font-weight: bold;" th:text="${salary.totalSalary}"></td>
+                                <td th:text="${salary.salaryMonth}"></td>
+                            </tr>
+                            <tr th:if="${salaries.isEmpty()}">
+                                <td colspan="9" style="text-align: center; color: #999;">暂无数据，请先核算薪资</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 20px; padding: 15px; background: #f6ffed; border-radius: 5px;">
+                        <h4 style="margin-bottom: 10px; color: #52c41a;">薪资规则说明</h4>
+                        <ul style="margin-left: 20px; color: #666; line-height: 1.8;">
+                            <li>底薪：司机设定的基础工资</li>
+                            <li>订单提成：司机完成订单收入的80%</li>
+                            <li>奖金：月完成30单奖励200元，50单奖励500元</li>
+                            <li>实发工资 = 底薪 + 订单提成 + 奖金 - 扣款</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

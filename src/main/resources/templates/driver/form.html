@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司机表单</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}" class="active">司机管理</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">司机表单</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <h3 th:text="${driver.id == null} ? '新增司机' : '编辑司机'">新增司机</h3>
+                    <form th:action="@{/driver/save}" method="post" th:object="${driver}">
+                        <input type="hidden" th:field="*{id}">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>司机编号 *</label>
+                                <input type="text" th:field="*{driverNo}" required placeholder="请输入司机编号">
+                            </div>
+                            <div class="form-group">
+                                <label>姓名 *</label>
+                                <input type="text" th:field="*{name}" required placeholder="请输入姓名">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>手机号</label>
+                                <input type="text" th:field="*{phone}" placeholder="请输入手机号">
+                            </div>
+                            <div class="form-group">
+                                <label>身份证号</label>
+                                <input type="text" th:field="*{idCard}" placeholder="请输入身份证号">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>驾驶证号</label>
+                                <input type="text" th:field="*{licenseNo}" placeholder="请输入驾驶证号">
+                            </div>
+                            <div class="form-group">
+                                <label>驾照类型</label>
+                                <select th:field="*{licenseType}">
+                                    <option value="">请选择</option>
+                                    <option value="C1">C1</option>
+                                    <option value="C2">C2</option>
+                                    <option value="B1">B1</option>
+                                    <option value="B2">B2</option>
+                                    <option value="A1">A1</option>
+                                    <option value="A2">A2</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>驾照到期日期</label>
+                                <input type="date" th:field="*{licenseExpireDate}">
+                            </div>
+                            <div class="form-group">
+                                <label>底薪</label>
+                                <input type="number" step="0.01" th:field="*{baseSalary}" placeholder="请输入底薪">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>地址</label>
+                            <input type="text" th:field="*{address}" placeholder="请输入地址">
+                        </div>
+                        <div class="form-group">
+                            <label>状态</label>
+                            <select th:field="*{status}">
+                                <option value="1">在职</option>
+                                <option value="0">离职</option>
+                            </select>
+                        </div>
+                        <div class="actions">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <a th:href="@{/driver}" class="btn btn-warning">返回</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
