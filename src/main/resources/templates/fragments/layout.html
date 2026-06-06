@@ -15,7 +15,8 @@
                 <li><a th:href="@{/driver}" th:classappend="${#request.requestURI.startsWith('/driver') ? 'active' : ''}">司机管理</a></li>
                 <li><a th:href="@{/vehicle}" th:classappend="${#request.requestURI.startsWith('/vehicle') ? 'active' : ''}">车辆管理</a></li>
                 <li><a th:href="@{/freight}" th:classappend="${#request.requestURI.startsWith('/freight') ? 'active' : ''}">运价配置</a></li>
-                <li><a th:href="@{/order}" th:classappend="${#request.requestURI.startsWith('/order') ? 'active' : ''}">订单管理</a></li>
+                <li><a th:href="@{/order}" th:classappend="${#request.requestURI.startsWith('/order') and not #request.requestURI.startsWith('/order/stats') ? 'active' : ''}">订单管理</a></li>
+                <li><a th:href="@{/order/stats}" th:classappend="${#request.requestURI.startsWith('/order/stats') ? 'active' : ''}">里程统计</a></li>
                 <li><a th:href="@{/salary}" th:classappend="${#request.requestURI.startsWith('/salary') ? 'active' : ''}">薪资管理</a></li>
             </ul>
         </div>

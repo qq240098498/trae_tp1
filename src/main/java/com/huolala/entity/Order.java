@@ -46,12 +46,28 @@ public class Order {
     private BigDecimal waitFee;
 
     @Column(precision = 10, scale = 2)
+    private BigDecimal nightSurcharge;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal floorSurcharge;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal timeSlotSurcharge;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal otherSurcharge;
+
+    @Column(precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal driverIncome;
 
     private Integer waitMinutes;
+
+    private Integer floorCount;
+
+    private String timeSlotType;
 
     private Integer status;
 

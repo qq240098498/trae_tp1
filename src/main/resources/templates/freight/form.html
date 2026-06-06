@@ -70,6 +70,53 @@
                                 <input type="number" step="0.01" th:field="*{carryPrice}" placeholder="请输入搬运费">
                             </div>
                         </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>楼层费(元/层)</label>
+                                <input type="number" step="0.01" th:field="*{floorSurchargePerFloor}" placeholder="请输入楼层费">
+                            </div>
+                            <div class="form-group">
+                            </div>
+                        </div>
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; color: #333;">时段加价配置</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>高峰开始时间</label>
+                                <input type="time" th:field="*{peakTimeStart}" placeholder="例如: 07:00">
+                            </div>
+                            <div class="form-group">
+                                <label>高峰结束时间</label>
+                                <input type="time" th:field="*{peakTimeEnd}" placeholder="例如: 09:00">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>高峰加价率</label>
+                                <input type="number" step="0.01" th:field="*{peakSurchargeRate}" placeholder="例如: 0.2 表示20%">
+                            </div>
+                            <div class="form-group">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>夜间开始时间</label>
+                                <input type="time" th:field="*{nightTimeStart}" placeholder="例如: 22:00">
+                            </div>
+                            <div class="form-group">
+                                <label>夜间结束时间</label>
+                                <input type="time" th:field="*{nightTimeEnd}" placeholder="例如: 06:00">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>夜间加价率</label>
+                                <input type="number" step="0.01" th:field="*{nightSurchargeRate}" placeholder="例如: 0.3 表示30%">
+                            </div>
+                            <div class="form-group">
+                                <label>夜间最低加价(元)</label>
+                                <input type="number" step="0.01" th:field="*{minNightSurcharge}" placeholder="请输入最低加价">
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label>说明</label>
                             <textarea th:field="*{description}" rows="3" placeholder="请输入说明"></textarea>

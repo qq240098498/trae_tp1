@@ -321,6 +321,56 @@ table tr:hover {
     gap: 20px;
 }
 
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-warning {
+    background: #fff7e6;
+    color: #fa8c16;
+}
+
+.badge-dark {
+    background: #1f1f1f;
+    color: #fff;
+}
+
+.badge-success {
+    background: #f6ffed;
+    color: #52c41a;
+}
+
+.badge-gold {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #8b6914;
+    font-weight: bold;
+}
+
+.badge-silver {
+    background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+    color: #595959;
+    font-weight: bold;
+}
+
+.badge-bronze {
+    background: linear-gradient(135deg, #cd7f32, #f0a860);
+    color: #7a3f12;
+    font-weight: bold;
+}
+
+.table th a {
+    color: #333;
+    text-decoration: none;
+}
+
+.table th a:hover {
+    color: #1890ff;
+}
+
 @media (max-width: 768px) {
     .form-row {
         grid-template-columns: 1fr;

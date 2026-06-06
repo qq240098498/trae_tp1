@@ -30,6 +30,26 @@ public class FreightConfig {
     @Column(precision = 10, scale = 2)
     private BigDecimal carryPrice;
 
+    @Column(precision = 10, scale = 2)
+    private BigDecimal peakSurchargeRate;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal nightSurchargeRate;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal floorSurchargePerFloor;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal minNightSurcharge;
+
+    private String peakTimeStart;
+
+    private String peakTimeEnd;
+
+    private String nightTimeStart;
+
+    private String nightTimeEnd;
+
     private String description;
 
     private Integer status;

@@ -1,8 +1,11 @@
 package com.huolala.controller;
 
+import com.huolala.dto.DriverMileageStats;
 import com.huolala.entity.Order;
+import com.huolala.entity.OrderFeeDetail;
 import com.huolala.service.DriverService;
 import com.huolala.service.FreightConfigService;
+import com.huolala.service.OrderFeeDetailService;
 import com.huolala.service.OrderService;
 import com.huolala.service.VehicleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +14,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Controller
@@ -24,6 +30,8 @@ public class OrderController {
     private VehicleService vehicleService;
     @Autowired
     private FreightConfigService freightConfigService;
+    @Autowired
+    private OrderFeeDetailService orderFeeDetailService;
 
     @GetMapping
     public String list(Model model) {
@@ -45,7 +53,33 @@ public class OrderController {
         model.addAttribute("order", order);
         model.addAttribute("drivers", driverService.findActive());
         model.addAttribute("vehicles", vehicleService.findActive());
+        List<OrderFeeDetail> feeDetails = orderFeeDetailService.findByOrderId(id);
+        model.addAttribute("feeDetails", feeDetails);
         return "order/detail";
+    }
+
+    @GetMapping("/stats")
+    public String mileageStats(@RequestParam(required = false) String month,
+                               @RequestParam(required = false) String sortBy,
+                               @RequestParam(required = false) String sortOrder,
+                               Model model) {
+        if (month == null || month.isEmpty()) {
+            month = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        }
+        if (sortBy == null || sortBy.isEmpty()) {
+            sortBy = "totalMileage";
+        }
+        if (sortOrder == null || sortOrder.isEmpty()) {
+            sortOrder = "desc";
+        }
+
+        List<DriverMileageStats> stats = orderService.getDriverMileageStats(month, sortBy, sortOrder);
+        model.addAttribute("stats", stats);
+        model.addAttribute("month", month);
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortOrder", sortOrder);
+        model.addAttribute("reverseSortOrder", "asc".equals(sortOrder) ? "desc" : "asc");
+        return "order/stats";
     }
 
     @PostMapping("/save")

@@ -1,7 +1,10 @@
 package com.huolala.service;
 
+import com.huolala.dto.DriverMileageStats;
+import com.huolala.dto.FreightCalculationResult;
 import com.huolala.entity.Driver;
 import com.huolala.entity.Order;
+import com.huolala.entity.OrderFeeDetail;
 import com.huolala.entity.Vehicle;
 import com.huolala.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -21,6 +25,9 @@ public class OrderService {
 
     @Autowired
     private FreightConfigService freightConfigService;
+
+    @Autowired
+    private OrderFeeDetailService orderFeeDetailService;
 
     @Autowired
     private DriverService driverService;
@@ -56,20 +63,39 @@ public class OrderService {
         order.setStatus(0);
         order.setOrderTime(LocalDateTime.now());
 
-        BigDecimal freight = freightConfigService.calculateFreight(order.getVehicleType(), order.getDistance());
-        order.setFreight(freight);
+        String timeSlotType = freightConfigService.getTimeSlotType(order.getOrderTime(), order.getVehicleType());
+        order.setTimeSlotType(timeSlotType);
 
-        BigDecimal carryFee = order.getCarryFee() != null ? order.getCarryFee() : BigDecimal.ZERO;
-        order.setCarryFee(carryFee);
+        FreightCalculationResult calcResult = freightConfigService.calculateFreight(
+                order.getVehicleType(),
+                order.getDistance(),
+                order.getFloorCount(),
+                order.getOrderTime(),
+                order.getCarryFee(),
+                order.getOtherSurcharge()
+        );
 
+        order.setFreight(calcResult.getBaseFreight().add(calcResult.getMileageFee()));
+        order.setCarryFee(calcResult.getCarryFee());
+        order.setNightSurcharge(calcResult.getNightSurcharge());
+        order.setFloorSurcharge(calcResult.getFloorSurcharge());
+        order.setTimeSlotSurcharge(calcResult.getTimeSlotSurcharge());
+        order.setOtherSurcharge(calcResult.getOtherSurcharge());
         order.setWaitFee(BigDecimal.ZERO);
         order.setWaitMinutes(0);
-        order.setTotalAmount(freight.add(carryFee));
+        order.setTotalAmount(calcResult.getTotalAmount());
 
         BigDecimal driverIncome = order.getTotalAmount().multiply(new BigDecimal("0.80"));
         order.setDriverIncome(driverIncome.setScale(2, BigDecimal.ROUND_HALF_UP));
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        for (OrderFeeDetail detail : calcResult.getFeeDetails()) {
+            detail.setOrderId(savedOrder.getId());
+        }
+        orderFeeDetailService.saveBatch(calcResult.getFeeDetails());
+
+        return savedOrder;
     }
 
     @Transactional
@@ -117,6 +143,10 @@ public class OrderService {
             order.setTotalAmount(order.getTotalAmount().add(waitFee));
             BigDecimal driverIncome = order.getTotalAmount().multiply(new BigDecimal("0.80"));
             order.setDriverIncome(driverIncome.setScale(2, BigDecimal.ROUND_HALF_UP));
+
+            OrderFeeDetail waitDetail = freightConfigService.createWaitFeeDetail(
+                    orderId, order.getVehicleType(), waitMinutes);
+            orderFeeDetailService.save(waitDetail);
         }
 
         order.setStatus(4);
@@ -152,6 +182,81 @@ public class OrderService {
         LocalDateTime startTime = LocalDateTime.of(year, monthValue, 1, 0, 0, 0);
         LocalDateTime endTime = startTime.plusMonths(1);
         return orderRepository.countCompletedOrdersByDriverAndDateRange(driverId, startTime, endTime);
+    }
+
+    public List<DriverMileageStats> getDriverMileageStats(String month, String sortBy, String sortOrder) {
+        List<Driver> drivers = driverService.findAll();
+        List<DriverMileageStats> statsList = new ArrayList<>();
+
+        for (Driver driver : drivers) {
+            List<Order> orders = findCompletedOrdersByDriverAndMonth(driver.getId(), month);
+            
+            if (orders.isEmpty()) {
+                continue;
+            }
+
+            double totalMileage = orders.stream()
+                    .filter(o -> o.getDistance() != null)
+                    .mapToDouble(Order::getDistance)
+                    .sum();
+
+            int orderCount = orders.size();
+
+            BigDecimal totalIncome = orders.stream()
+                    .filter(o -> o.getDriverIncome() != null)
+                    .map(Order::getDriverIncome)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal totalFreight = orders.stream()
+                    .filter(o -> o.getTotalAmount() != null)
+                    .map(Order::getTotalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            double avgMileage = orderCount > 0 ? totalMileage / orderCount : 0;
+
+            DriverMileageStats stats = new DriverMileageStats();
+            stats.setDriverId(driver.getId());
+            stats.setDriverName(driver.getName());
+            stats.setDriverNo(driver.getDriverNo());
+            stats.setTotalMileage(Math.round(totalMileage * 100.0) / 100.0);
+            stats.setOrderCount(orderCount);
+            stats.setTotalIncome(totalIncome.setScale(2, BigDecimal.ROUND_HALF_UP));
+            stats.setTotalFreight(totalFreight.setScale(2, BigDecimal.ROUND_HALF_UP));
+            stats.setAvgMileagePerOrder(Math.round(avgMileage * 100.0) / 100.0);
+
+            statsList.add(stats);
+        }
+
+        if (sortBy != null && !sortBy.isEmpty()) {
+            boolean ascending = "asc".equalsIgnoreCase(sortOrder);
+            statsList.sort((s1, s2) -> {
+                int result = 0;
+                switch (sortBy) {
+                    case "totalMileage":
+                        result = Double.compare(s1.getTotalMileage(), s2.getTotalMileage());
+                        break;
+                    case "orderCount":
+                        result = Integer.compare(s1.getOrderCount(), s2.getOrderCount());
+                        break;
+                    case "totalIncome":
+                        result = s1.getTotalIncome().compareTo(s2.getTotalIncome());
+                        break;
+                    case "totalFreight":
+                        result = s1.getTotalFreight().compareTo(s2.getTotalFreight());
+                        break;
+                    case "avgMileagePerOrder":
+                        result = Double.compare(s1.getAvgMileagePerOrder(), s2.getAvgMileagePerOrder());
+                        break;
+                    default:
+                        result = Double.compare(s2.getTotalMileage(), s1.getTotalMileage());
+                }
+                return ascending ? result : -result;
+            });
+        } else {
+            statsList.sort((s1, s2) -> Double.compare(s2.getTotalMileage(), s1.getTotalMileage()));
+        }
+
+        return statsList;
     }
 
     private String generateOrderNo() {

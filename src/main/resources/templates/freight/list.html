@@ -35,15 +35,17 @@
                         <h3 style="margin: 0;">运价列表</h3>
                         <a th:href="@{/freight/add}" class="btn btn-primary">+ 新增配置</a>
                     </div>
-                    <table>
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>车型</th>
                                 <th>起步价</th>
-                                <th>起步里程(公里)</th>
-                                <th>里程单价(元/公里)</th>
-                                <th>等候费(元/分钟)</th>
-                                <th>搬运费</th>
+                                <th>起步里程</th>
+                                <th>里程单价</th>
+                                <th>高峰时段</th>
+                                <th>加价率</th>
+                                <th>夜间时段</th>
+                                <th>加价率</th>
                                 <th>状态</th>
                                 <th>操作</th>
                             </tr>
@@ -51,11 +53,29 @@
                         <tbody>
                             <tr th:each="config : ${configs}">
                                 <td th:text="${config.vehicleType}"></td>
-                                <td th:text="${config.startPrice}"></td>
-                                <td th:text="${config.startDistance}"></td>
-                                <td th:text="${config.pricePerKm}"></td>
-                                <td th:text="${config.waitPricePerMin}"></td>
-                                <td th:text="${config.carryPrice}"></td>
+                                <td th:text="'¥' + ${config.startPrice}"></td>
+                                <td th:text="${config.startDistance} + '公里'"></td>
+                                <td th:text="'¥' + ${config.pricePerKm} + '/公里'"></td>
+                                <td>
+                                    <span th:if="${config.peakTimeStart != null and config.peakTimeEnd != null}"
+                                          th:text="${config.peakTimeStart} + '-' + ${config.peakTimeEnd}"></span>
+                                    <span th:if="${config.peakTimeStart == null or config.peakTimeEnd == null}" style="color: #999;">未配置</span>
+                                </td>
+                                <td>
+                                    <span th:if="${config.peakSurchargeRate != null}"
+                                          th:text="${config.peakSurchargeRate * 100} + '%'"></span>
+                                    <span th:if="${config.peakSurchargeRate == null}" style="color: #999;">-</span>
+                                </td>
+                                <td>
+                                    <span th:if="${config.nightTimeStart != null and config.nightTimeEnd != null}"
+                                          th:text="${config.nightTimeStart} + '-' + ${config.nightTimeEnd}"></span>
+                                    <span th:if="${config.nightTimeStart == null or config.nightTimeEnd == null}" style="color: #999;">未配置</span>
+                                </td>
+                                <td>
+                                    <span th:if="${config.nightSurchargeRate != null}"
+                                          th:text="${config.nightSurchargeRate * 100} + '%'"></span>
+                                    <span th:if="${config.nightSurchargeRate == null}" style="color: #999;">-</span>
+                                </td>
                                 <td>
                                     <span th:class="${config.status == 1 ? 'status-badge status-4' : 'status-badge status-9'}"
                                           th:text="${config.status == 1 ? '启用' : '禁用'}"></span>
@@ -66,7 +86,7 @@
                                 </td>
                             </tr>
                             <tr th:if="${configs.isEmpty()}">
-                                <td colspan="8" style="text-align: center; color: #999;">暂无数据</td>
+                                <td colspan="10" style="text-align: center; color: #999;">暂无数据</td>
                             </tr>
                         </tbody>
                     </table>

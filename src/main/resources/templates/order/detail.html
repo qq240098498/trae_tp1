@@ -16,6 +16,7 @@
                 <li><a th:href="@{/vehicle}">车辆管理</a></li>
                 <li><a th:href="@{/freight}">运价配置</a></li>
                 <li><a th:href="@{/order}" class="active">订单管理</a></li>
+                <li><a th:href="@{/order/stats}">里程统计</a></li>
                 <li><a th:href="@{/salary}">薪资管理</a></li>
             </ul>
         </div>
@@ -92,6 +93,30 @@
                             <span class="value" th:text="'¥' + ${order.waitFee} + ' (' + ${order.waitMinutes} + '分钟)'"></span>
                         </div>
                         <div class="detail-item">
+                            <label>高峰加价：</label>
+                            <span class="value" th:text="'¥' + ${order.timeSlotSurcharge}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>夜间服务费：</label>
+                            <span class="value" th:text="'¥' + ${order.nightSurcharge}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>楼层费：</label>
+                            <span class="value" th:text="'¥' + ${order.floorSurcharge} + ' (' + ${order.floorCount != null ? order.floorCount : 0} + '层)'"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>其他附加费：</label>
+                            <span class="value" th:text="'¥' + ${order.otherSurcharge}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>时段类型：</label>
+                            <span class="value">
+                                <span th:if="${order.timeSlotType == 'PEAK'}" class="badge badge-warning">高峰时段</span>
+                                <span th:if="${order.timeSlotType == 'NIGHT'}" class="badge badge-dark">夜间时段</span>
+                                <span th:if="${order.timeSlotType == 'NORMAL'}" class="badge badge-success">正常时段</span>
+                            </span>
+                        </div>
+                        <div class="detail-item">
                             <label>总金额：</label>
                             <span class="value" style="color: #ff4d4f; font-weight: bold;" th:text="'¥' + ${order.totalAmount}"></span>
                         </div>
@@ -100,6 +125,30 @@
                             <span class="value" style="color: #52c41a; font-weight: bold;" th:text="'¥' + ${order.driverIncome}"></span>
                         </div>
                     </div>
+                </div>
+                <div class="card">
+                    <h3>费用明细</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>费用类型</th>
+                                <th>费用名称</th>
+                                <th>金额</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="detail : ${feeDetails}">
+                                <td th:text="${detail.feeType}"></td>
+                                <td th:text="${detail.feeName}"></td>
+                                <td th:text="'¥' + ${detail.feeAmount}"></td>
+                                <td th:text="${detail.description}"></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(feeDetails)}">
+                                <td colspan="4" style="text-align: center; color: #999;">暂无费用明细</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
                 <div class="card">
                     <h3>司机车辆信息</h3>

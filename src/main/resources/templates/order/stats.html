@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head('员工里程统计')"></head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/order/stats}" class="active">里程统计</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">员工里程统计看板</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <h3>统计筛选</h3>
+                    <form th:action="@{/order/stats}" method="get">
+                        <div class="form-row">
+                            <div class="form-group">
+                            </div>
+                            <div class="form-group">
+                                <label>统计月份</label>
+                                <input type="month" name="month" th:value="${month}">
+                            </div>
+                            <div class="form-group" style="align-self: flex-end;">
+                                <button type="submit" class="btn btn-primary">查询</button>
+                                <a th:href="@{/order/stats}" class="btn btn-warning">重置</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${#lists.size(stats)}">0</div>
+                        <div class="stat-label">在职司机数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${#aggregates.sum(stats.![orderCount])}">0</div>
+                        <div class="stat-label">总订单数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${#numbers.formatDecimal(#aggregates.sum(stats.![totalMileage]), 1, 2)}">0</div>
+                        <div class="stat-label">总里程(公里)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: #52c41a;" th:text="'¥' + ${#numbers.formatDecimal(#aggregates.sum(stats.![totalIncome]), 1, 2)}">¥0</div>
+                        <div class="stat-label">总司机收入</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>里程排行榜</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>
+                                    <a th:href="@{/order/stats(month=${month}, sortBy='driverNo', sortOrder=${sortBy == 'driverNo' ? reverseSortOrder : 'asc'})}">
+                                        司机编号
+                                        <span th:if="${sortBy == 'driverNo'}" th:text="${sortOrder == 'asc' ? '↑' : '↓'}"></span>
+                                    </a>
+                                </th>
+                                <th>司机姓名</th>
+                                <th>
+                                    <a th:href="@{/order/stats(month=${month}, sortBy='orderCount', sortOrder=${sortBy == 'orderCount' ? reverseSortOrder : 'desc'})}">
+                                        订单数
+                                        <span th:if="${sortBy == 'orderCount'}" th:text="${sortOrder == 'asc' ? '↑' : '↓'}"></span>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/order/stats(month=${month}, sortBy='totalMileage', sortOrder=${sortBy == 'totalMileage' ? reverseSortOrder : 'desc'})}">
+                                        总里程(公里)
+                                        <span th:if="${sortBy == 'totalMileage'}" th:text="${sortOrder == 'asc' ? '↑' : '↓'}"></span>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/order/stats(month=${month}, sortBy='avgMileagePerOrder', sortOrder=${sortBy == 'avgMileagePerOrder' ? reverseSortOrder : 'desc'})}">
+                                        平均里程(公里/单)
+                                        <span th:if="${sortBy == 'avgMileagePerOrder'}" th:text="${sortOrder == 'asc' ? '↑' : '↓'}"></span>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/order/stats(month=${month}, sortBy='totalFreight', sortOrder=${sortBy == 'totalFreight' ? reverseSortOrder : 'desc'})}">
+                                        总运费
+                                        <span th:if="${sortBy == 'totalFreight'}" th:text="${sortOrder == 'asc' ? '↑' : '↓'}"></span>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/order/stats(month=${month}, sortBy='totalIncome', sortOrder=${sortBy == 'totalIncome' ? reverseSortOrder : 'desc'})}">
+                                        司机收入
+                                        <span th:if="${sortBy == 'totalIncome'}" th:text="${sortOrder == 'asc' ? '↑' : '↓'}"></span>
+                                    </a>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="stat, iterStat : ${stats}">
+                                <td>
+                                    <span th:if="${iterStat.index == 0}" class="badge badge-gold">🥇 第1名</span>
+                                    <span th:if="${iterStat.index == 1}" class="badge badge-silver">🥈 第2名</span>
+                                    <span th:if="${iterStat.index == 2}" class="badge badge-bronze">🥉 第3名</span>
+                                    <span th:if="${iterStat.index > 2}" th:text="'第' + ${iterStat.index + 1} + '名'"></span>
+                                </td>
+                                <td th:text="${stat.driverNo}"></td>
+                                <td th:text="${stat.driverName}"></td>
+                                <td th:text="${stat.orderCount}"></td>
+                                <td th:text="${#numbers.formatDecimal(stat.totalMileage, 1, 2)}"></td>
+                                <td th:text="${#numbers.formatDecimal(stat.avgMileagePerOrder, 1, 2)}"></td>
+                                <td th:text="'¥' + ${#numbers.formatDecimal(stat.totalFreight, 1, 2)}"></td>
+                                <td style="color: #52c41a; font-weight: bold;" th:text="'¥' + ${#numbers.formatDecimal(stat.totalIncome, 1, 2)}"></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(stats)}">
+                                <td colspan="8" style="text-align: center; color: #999;">暂无统计数据</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
