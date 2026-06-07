@@ -35,6 +35,9 @@ public class OrderService {
     @Autowired
     private VehicleService vehicleService;
 
+    @Autowired
+    private DriverStatsRedisService driverStatsRedisService;
+
     private final Random random = new Random();
 
     public List<Order> findAll() {
@@ -152,7 +155,10 @@ public class OrderService {
         order.setStatus(4);
         order.setCompleteTime(LocalDateTime.now());
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        driverStatsRedisService.updateDriverStats(savedOrder);
+
+        return savedOrder;
     }
 
     @Transactional
@@ -185,6 +191,11 @@ public class OrderService {
     }
 
     public List<DriverMileageStats> getDriverMileageStats(String month, String sortBy, String sortOrder) {
+        List<DriverMileageStats> redisStats = driverStatsRedisService.getDriverMileageStatsFromRedis(month, sortBy, sortOrder);
+        if (redisStats != null && !redisStats.isEmpty()) {
+            return redisStats;
+        }
+
         List<Driver> drivers = driverService.findAll();
         List<DriverMileageStats> statsList = new ArrayList<>();
 
@@ -254,6 +265,10 @@ public class OrderService {
             });
         } else {
             statsList.sort((s1, s2) -> Double.compare(s2.getTotalMileage(), s1.getTotalMileage()));
+        }
+
+        if (!statsList.isEmpty()) {
+            driverStatsRedisService.rebuildStats(month, statsList);
         }
 
         return statsList;
