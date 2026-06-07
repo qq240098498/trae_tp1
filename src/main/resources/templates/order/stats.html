@@ -29,14 +29,12 @@
                 <div class="card">
                     <h3>统计筛选</h3>
                     <form th:action="@{/order/stats}" method="get">
-                        <div class="form-row">
-                            <div class="form-group">
-                            </div>
+                        <div class="filter-row">
                             <div class="form-group">
                                 <label>统计月份</label>
                                 <input type="month" name="month" th:value="${month}">
                             </div>
-                            <div class="form-group" style="align-self: flex-end;">
+                            <div class="form-actions">
                                 <button type="submit" class="btn btn-primary">查询</button>
                                 <a th:href="@{/order/stats}" class="btn btn-warning">重置</a>
                             </div>
@@ -46,19 +44,19 @@
 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-number" th:text="${#lists.size(stats)}">0</div>
+                        <div class="stat-number" th:text="${#lists.isEmpty(stats) ? 0 : #lists.size(stats)}">0</div>
                         <div class="stat-label">在职司机数</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number" th:text="${#aggregates.sum(stats.![orderCount])}">0</div>
+                        <div class="stat-number" th:text="${#lists.isEmpty(stats) ? 0 : #aggregates.sum(stats.![orderCount])}">0</div>
                         <div class="stat-label">总订单数</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number" th:text="${#numbers.formatDecimal(#aggregates.sum(stats.![totalMileage]), 1, 2)}">0</div>
+                        <div class="stat-number" th:text="${#lists.isEmpty(stats) ? '0.00' : #numbers.formatDecimal(#aggregates.sum(stats.![totalMileage]), 1, 2)}">0</div>
                         <div class="stat-label">总里程(公里)</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number" style="color: #52c41a;" th:text="'¥' + ${#numbers.formatDecimal(#aggregates.sum(stats.![totalIncome]), 1, 2)}">¥0</div>
+                        <div class="stat-number" style="color: #52c41a;" th:text="${#lists.isEmpty(stats) ? '¥0.00' : '¥' + #numbers.formatDecimal(#aggregates.sum(stats.![totalIncome]), 1, 2)}">¥0</div>
                         <div class="stat-label">总司机收入</div>
                     </div>
                 </div>
@@ -118,11 +116,11 @@
                                 </td>
                                 <td th:text="${stat.driverNo}"></td>
                                 <td th:text="${stat.driverName}"></td>
-                                <td th:text="${stat.orderCount}"></td>
-                                <td th:text="${#numbers.formatDecimal(stat.totalMileage, 1, 2)}"></td>
-                                <td th:text="${#numbers.formatDecimal(stat.avgMileagePerOrder, 1, 2)}"></td>
-                                <td th:text="'¥' + ${#numbers.formatDecimal(stat.totalFreight, 1, 2)}"></td>
-                                <td style="color: #52c41a; font-weight: bold;" th:text="'¥' + ${#numbers.formatDecimal(stat.totalIncome, 1, 2)}"></td>
+                                <td th:text="${stat.orderCount == null ? 0 : stat.orderCount}"></td>
+                                <td th:text="${stat.totalMileage == null ? '0.00' : #numbers.formatDecimal(stat.totalMileage, 1, 2)}"></td>
+                                <td th:text="${stat.avgMileagePerOrder == null ? '0.00' : #numbers.formatDecimal(stat.avgMileagePerOrder, 1, 2)}"></td>
+                                <td th:text="${stat.totalFreight == null ? '¥0.00' : '¥' + #numbers.formatDecimal(stat.totalFreight, 1, 2)}"></td>
+                                <td style="color: #52c41a; font-weight: bold;" th:text="${stat.totalIncome == null ? '¥0.00' : '¥' + #numbers.formatDecimal(stat.totalIncome, 1, 2)}"></td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(stats)}">
                                 <td colspan="8" style="text-align: center; color: #999;">暂无统计数据</td>

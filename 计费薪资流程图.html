@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>货拉拉计费与薪资计算流程图</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 32px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        h2 {
+            color: #333;
+            margin: 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 24px;
+        }
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .mermaid {
+            text-align: center;
+            overflow-x: auto;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .formula-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .formula-box h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .formula-box p {
+            margin: 5px 0;
+            color: #333;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚚 货拉拉计费与薪资计算系统</h1>
+        
+        <!-- 订单计费流程 -->
+        <div class="section">
+            <h2>📊 一、订单计费流程</h2>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff9999;"></div>
+                    <span>起步价相关</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #99ccff;"></div>
+                    <span>里程费相关</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffcc99;"></div>
+                    <span>时段加价</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ccff99;"></div>
+                    <span>附加费用</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #d9b3ff;"></div>
+                    <span>司机收入</span>
+                </div>
+            </div>
+
+            <div class="mermaid">
+graph TD
+    A[开始: 创建订单] --> B[获取车型计费配置<br>FreightConfig]
+    B --> C{配置是否存在?}
+    C -->|否| Z[返回空结果]
+    C -->|是| D[计算起步价<br>baseFreight = startPrice]
+    
+    D --> E{里程 > 起步里程?}
+    E -->|是| F[计算里程费<br>mileageFee = (distance - startDistance) × pricePerKm]
+    E -->|否| G[里程费 = 0]
+    
+    F --> H[判断订单时段]
+    G --> H
+    
+    H --> I{是否高峰时段?}
+    I -->|是| J[计算高峰加价<br>timeSlotSurcharge = (baseFreight + mileageFee) × peakSurchargeRate]
+    I -->|否| K[高峰加价 = 0]
+    
+    J --> L{是否夜间时段?}
+    K --> L
+    
+    L -->|是| M[计算夜间费<br>nightSurcharge = (baseFreight + mileageFee) × nightSurchargeRate]
+    L -->|否| N[夜间费 = 0]
+    
+    M --> O{夜间费 < 最低夜间费?}
+    O -->|是| P[夜间费 = minNightSurcharge]
+    O -->|否| Q[保持原计算值]
+    N --> R
+    
+    P --> R[计算楼层费<br>floorSurcharge = floorCount × floorSurchargePerFloor]
+    Q --> R
+    
+    R --> S[搬运费 carryFee = 用户输入]
+    S --> T[其他附加费 otherSurcharge = 用户输入]
+    
+    T --> U[计算订单总金额]
+    U --> V[总金额 = 起步价 + 里程费 + 高峰加价 + 夜间费 + 楼层费 + 搬运费 + 其他附加费]
+    
+    V --> W[计算司机收入<br>driverIncome = 总金额 × 80%]
+    W --> X[保存订单及费用明细]
+    X --> Y[订单计费完成]
+
+    style D fill:#ff9999,stroke:#cc0000
+    style F fill:#99ccff,stroke:#0066cc
+    style J fill:#ffcc99,stroke:#cc6600
+    style M fill:#ffcc99,stroke:#cc6600
+    style P fill:#ffcc99,stroke:#cc6600
+    style R fill:#ccff99,stroke:#339933
+    style S fill:#ccff99,stroke:#339933
+    style T fill:#ccff99,stroke:#339933
+    style W fill:#d9b3ff,stroke:#6600cc
+    style V fill:#ffff99,stroke:#cccc00,stroke-width:2px
+            </div>
+
+            <div class="formula-box">
+                <h4>📐 订单计费公式</h4>
+                <p>总金额 = 起步价 + 里程费 + 高峰加价 + 夜间费 + 楼层费 + 搬运费 + 其他附加费 + 等候费</p>
+                <p>司机收入 = 总金额 × 80%</p>
+            </div>
+        </div>
+
+        <!-- 费用明细说明 -->
+        <div class="section">
+            <h2>💰 二、各项费用计算明细</h2>
+            
+            <div class="mermaid">
+graph LR
+    subgraph 基础费用
+        A1[起步价<br>startPrice] --> B1[包含起步里程内的费用]
+        A2[里程费<br>mileageFee] --> B2[超出起步里程部分 × 每公里单价]
+    end
+    
+    subgraph 时段加价
+        C1[高峰时段加价<br>timeSlotSurcharge] --> D1[(起步价+里程费) × 高峰加价比例]
+        C2[夜间服务费<br>nightSurcharge] --> D2[(起步价+里程费) × 夜间加价比例<br>⚠️ 不低于最低夜间费]
+    end
+    
+    subgraph 附加费用
+        E1[楼层费<br>floorSurcharge] --> F1[楼层数 × 每层加价]
+        E2[搬运费<br>carryFee] --> F2[用户输入的人工搬运费]
+        E3[其他附加费<br>otherSurcharge] --> F3[用户输入的其他费用]
+        E4[等候费<br>waitFee] --> F4[等候分钟数 × 每分钟单价<br>订单完成时计算]
+    end
+    
+    style A1 fill:#ff9999
+    style A2 fill:#99ccff
+    style C1 fill:#ffcc99
+    style C2 fill:#ffcc99
+    style E1 fill:#ccff99
+    style E2 fill:#ccff99
+    style E3 fill:#ccff99
+    style E4 fill:#ccff99
+            </div>
+        </div>
+
+        <!-- 时段判断逻辑 -->
+        <div class="section">
+            <h2>⏰ 三、时段判断逻辑</h2>
+            
+            <div class="mermaid">
+graph TD
+    A[获取订单时间 orderTime] --> B[转换为 LocalTime]
+    B --> C{是否在高峰时段范围内?<br>peakTimeStart ~ peakTimeEnd}
+    C -->|是| D[时段类型 = PEAK 高峰时段]
+    C -->|否| E{是否在夜间时段范围内?<br>nightTimeStart ~ nightTimeEnd}
+    
+    E -->|是| F[时段类型 = NIGHT 夜间时段]
+    E -->|否| G[时段类型 = NORMAL 普通时段]
+    
+    D --> H[根据时段类型计算对应加价]
+    F --> H
+    G --> H
+    
+    style D fill:#ffcc99
+    style F fill:#666699,color:white
+    style G fill:#99cc99
+            </div>
+            
+            <div class="formula-box">
+                <h4>🕐 时段说明</h4>
+                <p>高峰时段 (PEAK): 如 07:00-09:00, 17:00-19:00，按比例加价</p>
+                <p>夜间时段 (NIGHT): 如 22:00-06:00，按比例加价且设最低收费</p>
+                <p>普通时段 (NORMAL): 无额外加价</p>
+            </div>
+        </div>
+
+        <!-- 薪资计算流程 -->
+        <div class="section">
+            <h2>💵 四、司机薪资计算流程</h2>
+            
+            <div class="mermaid">
+graph TD
+    A[开始: 计算司机月薪] --> B[获取司机信息 Driver]
+    B --> C{司机是否存在?}
+    C -->|否| Z[抛出异常]
+    C -->|是| D{当月薪资是否已计算?}
+    
+    D -->|是| E[返回已存在的薪资记录]
+    D -->|否| F[查询当月完成订单列表]
+    
+    F --> G[统计订单数量 orderCount]
+    F --> H[累计所有订单司机收入 orderIncome]
+    
+    G --> I[计算奖金 bonus]
+    I --> J{订单数 ≥ 50?}
+    J -->|是| K[奖金 = 500元]
+    J -->|否| L{订单数 ≥ 30?}
+    L -->|是| M[奖金 = 200元]
+    L -->|否| N[奖金 = 0元]
+    
+    H --> O[获取基本工资 baseSalary]
+    K --> P
+    M --> P
+    N --> P
+    
+    O --> P[计算总薪资]
+    P --> Q[总薪资 = 基本工资 + 订单收入 + 奖金 - 扣款]
+    Q --> R[保存薪资记录 Salary]
+    R --> S[薪资计算完成]
+    
+    style I fill:#ffff99
+    style K fill:#ffcc00
+    style M fill:#ffcc99
+    style Q fill:#99ff99,stroke:#009900,stroke-width:2px
+            </div>
+
+            <div class="formula-box">
+                <h4>📊 薪资组成公式</h4>
+                <p>总薪资 = 基本工资 + 订单收入 + 奖金 - 扣款</p>
+                <p>订单收入 = Σ(每个订单的司机收入) = Σ(订单总金额 × 80%)</p>
+                <p>奖金规则: ≥50单 → 500元 | ≥30单 → 200元 | 其他 → 0元</p>
+            </div>
+        </div>
+
+        <!-- 完整数据流转 -->
+        <div class="section">
+            <h2>🔄 五、完整数据流转图</h2>
+            
+            <div class="mermaid">
+graph TD
+    subgraph 用户下单层
+        A[用户提交订单<br>车型/里程/楼层/时段] --> B[OrderController.createOrder]
+    end
+    
+    subgraph 订单服务层
+        B --> C[OrderService.createOrder]
+        C --> D[FreightConfigService.calculateFreight]
+    end
+    
+    subgraph 计费核心层
+        D --> E[读取车型配置 FreightConfig]
+        E --> F[计算各项费用]
+        F --> G[起步价]
+        F --> H[里程费]
+        F --> I[夜间费]
+        F --> J[楼层费]
+        F --> K[附加费]
+        G & H & I & J & K --> L[汇总总金额]
+        L --> M[计算司机收入 80%]
+        M --> N[生成费用明细 OrderFeeDetail]
+    end
+    
+    subgraph 订单完成层
+        O[司机完成订单<br>录入等候时间] --> P[OrderService.completeOrder]
+        P --> Q[计算等候费 waitFee]
+        Q --> R[更新总金额和司机收入]
+        R --> S[新增等候费明细]
+    end
+    
+    subgraph 薪资核算层
+        T[月底核算薪资] --> U[SalaryService.calculateSalary]
+        U --> V[查询当月所有完成订单]
+        V --> W[统计订单收入]
+        V --> X[统计订单数量计算奖金]
+        W & X --> Y[计算总薪资]
+        Y --> Z[保存薪资记录 Salary]
+    end
+    
+    N --> C
+    S --> C
+    
+    style D fill:#ff9999
+    style M fill:#d9b3ff
+    style U fill:#99ff99
+    style Y fill:#99ff99,stroke:#009900,stroke-width:2px
+            </div>
+        </div>
+
+        <!-- 核心代码位置 -->
+        <div class="section">
+            <h2>📁 六、核心代码位置</h2>
+            
+            <div class="mermaid">
+graph LR
+    A[计费核心] --> A1[FreightConfigService.java<br>calculateFreight() 方法]
+    A --> A2[FreightCalculationResult.java<br>费用计算结果DTO]
+    
+    B[订单服务] --> B1[OrderService.java<br>createOrder() 创建订单]
+    B --> B2[OrderService.java<br>completeOrder() 完成订单]
+    
+    C[薪资服务] --> C1[SalaryService.java<br>calculateSalary() 计算薪资]
+    
+    D[数据实体] --> D1[Order.java 订单实体]
+    D --> D2[OrderFeeDetail.java 费用明细]
+    D --> D3[Salary.java 薪资实体]
+    D --> D4[FreightConfig.java 计费配置]
+    
+    style A1 fill:#ff9999
+    style B1 fill:#99ccff
+    style B2 fill:#99ccff
+    style C1 fill:#99ff99
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            securityLevel: 'loose'
+        });
+    </script>
+</body>
+</html>

@@ -321,6 +321,24 @@ table tr:hover {
     gap: 20px;
 }
 
+.filter-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 15px;
+}
+
+.filter-row .form-group {
+    margin-bottom: 0;
+    flex: 1;
+}
+
+.filter-row .form-actions {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    display: flex;
+    gap: 10px;
+}
+
 .badge {
     display: inline-block;
     padding: 3px 10px;

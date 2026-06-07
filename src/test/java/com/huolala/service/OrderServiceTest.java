@@ -13,6 +13,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -226,7 +229,7 @@ class OrderServiceTest {
             saved.setId(1L);
             return saved;
         });
-        when(orderFeeDetailService.saveBatch(anyList())).thenReturn(null);
+        doNothing().when(orderFeeDetailService).saveBatch(anyList());
 
         Order result = orderService.createOrder(order);
 
@@ -262,7 +265,7 @@ class OrderServiceTest {
             saved.setId(1L);
             return saved;
         });
-        when(orderFeeDetailService.saveBatch(anyList())).thenReturn(null);
+        doNothing().when(orderFeeDetailService).saveBatch(anyList());
 
         Order result = orderService.createOrder(order);
 

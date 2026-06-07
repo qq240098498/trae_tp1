@@ -155,10 +155,10 @@ public class DriverStatsRedisService {
             stats.setDriverName(driver.getName());
             stats.setDriverNo(driver.getDriverNo());
 
-            Double totalMileage = ((Number) detailMap.get("totalMileage")).doubleValue();
-            Integer orderCount = ((Number) detailMap.get("orderCount")).intValue();
-            Double totalIncome = ((Number) detailMap.get("totalIncome")).doubleValue();
-            Double totalFreight = ((Number) detailMap.get("totalFreight")).doubleValue();
+            Double totalMileage = detailMap.get("totalMileage") != null ? ((Number) detailMap.get("totalMileage")).doubleValue() : 0.0;
+            Integer orderCount = detailMap.get("orderCount") != null ? ((Number) detailMap.get("orderCount")).intValue() : 0;
+            Double totalIncome = detailMap.get("totalIncome") != null ? ((Number) detailMap.get("totalIncome")).doubleValue() : 0.0;
+            Double totalFreight = detailMap.get("totalFreight") != null ? ((Number) detailMap.get("totalFreight")).doubleValue() : 0.0;
 
             stats.setTotalMileage(Math.round(totalMileage * 100.0) / 100.0);
             stats.setOrderCount(orderCount);

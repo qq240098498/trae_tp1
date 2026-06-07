@@ -44,11 +44,11 @@
                         <div class="stat-label">待接单</div>
                     </div>
                     <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='/order/stats'">
-                        <div class="stat-number" style="color: #52c41a;" th:text="${#numbers.formatDecimal(monthTotalMileage, 1, 2)}">0</div>
+                        <div class="stat-number" style="color: #52c41a;" th:text="${monthTotalMileage == null ? '0.00' : #numbers.formatDecimal(monthTotalMileage, 1, 2)}">0</div>
                         <div class="stat-label">本月总里程(公里) <span style="font-size: 12px;">→</span></div>
                     </div>
                     <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='/order/stats'">
-                        <div class="stat-number" style="color: #fa8c16;" th:text="${monthOrderCount}">0</div>
+                        <div class="stat-number" style="color: #fa8c16;" th:text="${monthOrderCount == null ? 0 : monthOrderCount}">0</div>
                         <div class="stat-label">本月完成订单 <span style="font-size: 12px;">→</span></div>
                     </div>
                 </div>
@@ -78,9 +78,9 @@
                                 </td>
                                 <td th:text="${driver.driverNo}"></td>
                                 <td th:text="${driver.driverName}"></td>
-                                <td th:text="${driver.orderCount}"></td>
-                                <td th:text="${#numbers.formatDecimal(driver.totalMileage, 1, 2)}"></td>
-                                <td style="color: #52c41a; font-weight: bold;" th:text="'¥' + ${#numbers.formatDecimal(driver.totalIncome, 1, 2)}"></td>
+                                <td th:text="${driver.orderCount == null ? 0 : driver.orderCount}"></td>
+                                <td th:text="${driver.totalMileage == null ? '0.00' : #numbers.formatDecimal(driver.totalMileage, 1, 2)}"></td>
+                                <td style="color: #52c41a; font-weight: bold;" th:text="${driver.totalIncome == null ? '¥0.00' : '¥' + #numbers.formatDecimal(driver.totalIncome, 1, 2)}"></td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(topDrivers)}">
                                 <td colspan="6" style="text-align: center; color: #999;">本月暂无完成订单</td>

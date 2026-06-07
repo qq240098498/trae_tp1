@@ -36,9 +36,11 @@ public class IndexController {
         List<DriverMileageStats> monthStats = orderService.getDriverMileageStats(currentMonth, "totalMileage", "desc");
         
         double totalMileage = monthStats.stream()
+                .filter(s -> s.getTotalMileage() != null)
                 .mapToDouble(DriverMileageStats::getTotalMileage)
                 .sum();
         int monthOrderCount = monthStats.stream()
+                .filter(s -> s.getOrderCount() != null)
                 .mapToInt(DriverMileageStats::getOrderCount)
                 .sum();
         

@@ -21,6 +21,22 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:6-alpine
+    container_name: huolala-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - huolala-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     build:
       context: .
@@ -35,15 +51,20 @@ services:
       MYSQL_DATABASE: huolala
       MYSQL_USER: root
       MYSQL_PASSWORD: root123456
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       TZ: Asia/Shanghai
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - huolala-network
 
 volumes:
   mysql-data:
+  redis-data:
 
 networks:
   huolala-network:
