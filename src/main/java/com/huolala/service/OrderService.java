@@ -2,10 +2,12 @@ package com.huolala.service;
 
 import com.huolala.dto.DriverMileageStats;
 import com.huolala.dto.FreightCalculationResult;
+import com.huolala.entity.CancelRefundRule;
 import com.huolala.entity.Driver;
 import com.huolala.entity.Order;
 import com.huolala.entity.OrderFeeDetail;
 import com.huolala.entity.Vehicle;
+import com.huolala.repository.CancelRefundRuleRepository;
 import com.huolala.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,9 @@ public class OrderService {
 
     @Autowired
     private DriverLevelService driverLevelService;
+
+    @Autowired
+    private CancelRefundRuleRepository cancelRefundRuleRepository;
 
     private final Random random = new Random();
 
@@ -81,10 +86,12 @@ public class OrderService {
         order.setStatus(0);
         order.setOrderTime(LocalDateTime.now());
 
-        String timeSlotType = freightConfigService.getTimeSlotType(order.getOrderTime(), order.getVehicleType());
+        String regionCode = order.getRegionCode();
+        String timeSlotType = freightConfigService.getTimeSlotType(regionCode, order.getOrderTime(), order.getVehicleType());
         order.setTimeSlotType(timeSlotType);
 
         FreightCalculationResult calcResult = freightConfigService.calculateFreight(
+                regionCode,
                 order.getVehicleType(),
                 order.getDistance(),
                 order.getFloorCount(),
@@ -164,12 +171,13 @@ public class OrderService {
 
         if (waitMinutes != null && waitMinutes > 0) {
             order.setWaitMinutes(waitMinutes);
-            BigDecimal waitFee = freightConfigService.calculateWaitFee(order.getVehicleType(), waitMinutes);
+            String regionCode = order.getRegionCode();
+            BigDecimal waitFee = freightConfigService.calculateWaitFee(regionCode, order.getVehicleType(), waitMinutes);
             order.setWaitFee(waitFee);
             order.setTotalAmount(order.getTotalAmount().add(waitFee));
 
             OrderFeeDetail waitDetail = freightConfigService.createWaitFeeDetail(
-                    orderId, order.getVehicleType(), waitMinutes);
+                    regionCode, orderId, order.getVehicleType(), waitMinutes);
             orderFeeDetailService.save(waitDetail);
         }
 
@@ -186,14 +194,75 @@ public class OrderService {
     }
 
     @Transactional
-    public Order cancelOrder(Long orderId) {
+    public Order cancelOrder(Long orderId, String cancelReason) {
         Order order = findById(orderId);
         if (order == null || order.getStatus() >= 4) {
             throw new RuntimeException("订单状态异常，无法取消");
         }
 
+        BigDecimal refundAmount = calculateRefundAmount(order);
+
         order.setStatus(9);
+        order.setCancelReason(cancelReason);
+        order.setCancelTime(LocalDateTime.now());
+        order.setRefundAmount(refundAmount);
+
+        if (refundAmount.compareTo(BigDecimal.ZERO) > 0) {
+            OrderFeeDetail refundDetail = new OrderFeeDetail();
+            refundDetail.setOrderId(order.getId());
+            refundDetail.setFeeType("REFUND");
+            refundDetail.setFeeName("取消退费");
+            refundDetail.setFeeAmount(refundAmount.negate().setScale(2, BigDecimal.ROUND_HALF_UP));
+            refundDetail.setDescription("订单取消退费，退费率：" + getRefundRateDesc(order.getStatus()) + "，退费金额：¥" + refundAmount.setScale(2, BigDecimal.ROUND_HALF_UP));
+            orderFeeDetailService.save(refundDetail);
+        }
+
         return orderRepository.save(order);
+    }
+
+    private BigDecimal calculateRefundAmount(Order order) {
+        if (order.getStatus() == 0) {
+            return order.getTotalAmount();
+        }
+
+        CancelRefundRule rule = cancelRefundRuleRepository
+                .findByFromStatusAndToStatusAndStatus(order.getStatus(), 9, 1);
+
+        if (rule != null && rule.getRefundRate() != null) {
+            BigDecimal refundRate = rule.getRefundRate();
+            return order.getTotalAmount().multiply(refundRate)
+                    .setScale(2, BigDecimal.ROUND_HALF_UP);
+        }
+
+        switch (order.getStatus()) {
+            case 1:
+                return order.getTotalAmount().multiply(new BigDecimal("0.80"))
+                        .setScale(2, BigDecimal.ROUND_HALF_UP);
+            case 2:
+                return order.getTotalAmount().multiply(new BigDecimal("0.50"))
+                        .setScale(2, BigDecimal.ROUND_HALF_UP);
+            default:
+                return BigDecimal.ZERO;
+        }
+    }
+
+    private String getRefundRateDesc(Integer fromStatus) {
+        CancelRefundRule rule = cancelRefundRuleRepository
+                .findByFromStatusAndToStatusAndStatus(fromStatus, 9, 1);
+        if (rule != null && rule.getRefundRate() != null) {
+            return rule.getRefundRate().multiply(new BigDecimal("100"))
+                    .setScale(0, BigDecimal.ROUND_HALF_UP) + "%";
+        }
+        switch (fromStatus) {
+            case 0:
+                return "100%";
+            case 1:
+                return "80%";
+            case 2:
+                return "50%";
+            default:
+                return "0%";
+        }
     }
 
     public List<Order> findCompletedOrdersByDriverAndMonth(Long driverId, String month) {
@@ -225,7 +294,7 @@ public class OrderService {
 
         for (Driver driver : drivers) {
             List<Order> orders = findCompletedOrdersByDriverAndMonth(driver.getId(), month);
-            
+
             if (orders.isEmpty()) {
                 continue;
             }

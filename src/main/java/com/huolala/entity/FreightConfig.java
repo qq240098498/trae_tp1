@@ -13,6 +13,9 @@ public class FreightConfig {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 50)
+    private String regionCode;
+
     private String vehicleType;
 
     @Column(precision = 10, scale = 2)

@@ -1,8 +1,10 @@
 package com.huolala.service;
 
 import com.huolala.dto.FreightCalculationResult;
+import com.huolala.entity.BillingRuleItem;
 import com.huolala.entity.FreightConfig;
 import com.huolala.entity.OrderFeeDetail;
+import com.huolala.repository.BillingRuleItemRepository;
 import com.huolala.repository.FreightConfigRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,10 +18,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,10 +33,14 @@ class FreightConfigServiceTest {
     @Mock
     private FreightConfigRepository freightConfigRepository;
 
+    @Mock
+    private BillingRuleItemRepository billingRuleItemRepository;
+
     @InjectMocks
     private FreightConfigService freightConfigService;
 
     private FreightConfig smallVanConfig;
+    private List<BillingRuleItem> allEnabledRules;
 
     @BeforeEach
     void setUp() {
@@ -49,12 +58,47 @@ class FreightConfigServiceTest {
         smallVanConfig.setNightTimeEnd("06:00");
         smallVanConfig.setNightSurchargeRate(new BigDecimal("0.20"));
         smallVanConfig.setMinNightSurcharge(new BigDecimal("10"));
+
+        allEnabledRules = new ArrayList<>();
+        String[] codes = {"BASE", "MILEAGE", "PEAK", "NIGHT", "FLOOR", "CARRY", "WAIT", "OTHER"};
+        String[] names = {"起步价", "里程费", "高峰时段加价", "夜间服务费", "楼层费", "搬运费", "等候费", "其他附加费"};
+        for (int i = 0; i < codes.length; i++) {
+            BillingRuleItem item = new BillingRuleItem();
+            item.setRuleCode(codes[i]);
+            item.setRuleName(names[i]);
+            item.setEnabled(1);
+            item.setStatus(1);
+            allEnabledRules.add(item);
+        }
+    }
+
+    private void mockAllBillingRulesEnabled() {
+        when(billingRuleItemRepository.findByEnabledAndStatus(1, 1)).thenReturn(allEnabledRules);
+    }
+
+    private void mockBillingRulesDisabled(String... disabledCodes) {
+        List<BillingRuleItem> rules = new ArrayList<>();
+        for (BillingRuleItem rule : allEnabledRules) {
+            boolean disabled = false;
+            for (String code : disabledCodes) {
+                if (rule.getRuleCode().equals(code)) {
+                    disabled = true;
+                    break;
+                }
+            }
+            rule.setEnabled(disabled ? 0 : 1);
+            rules.add(rule);
+        }
+        when(billingRuleItemRepository.findByEnabledAndStatus(1, 1)).thenReturn(
+                rules.stream().filter(r -> r.getEnabled() == 1).collect(java.util.stream.Collectors.toList())
+        );
     }
 
     @Test
     @DisplayName("TC-FREIGHT-001: 基础运费计算 - 里程在起步价范围内")
     void testCalculateFreight_BaseOnly_WithinStartDistance() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -75,6 +119,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-002: 基础运费计算 - 超出起步里程")
     void testCalculateFreight_WithMileageFee() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -89,6 +134,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-003: 夜间加费测试 - 22:00-06:00时段")
     void testCalculateFreight_NightSurcharge() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 23, 30);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -107,6 +153,7 @@ class FreightConfigServiceTest {
     void testCalculateFreight_NightSurcharge_Minimum() {
         smallVanConfig.setStartPrice(new BigDecimal("30"));
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 23, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -120,6 +167,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-005: 夜间加费测试 - 凌晨时段03:00")
     void testCalculateFreight_NightSurcharge_EarlyMorning() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 16, 3, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -132,6 +180,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-006: 非夜间时段 - 不加收夜间费")
     void testCalculateFreight_NoNightSurcharge_Daytime() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 15, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -144,6 +193,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-007: 楼层费测试 - 5层楼")
     void testCalculateFreight_FloorSurcharge() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -157,6 +207,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-008: 楼层费测试 - 0层楼不加收")
     void testCalculateFreight_FloorSurcharge_ZeroFloors() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -169,6 +220,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-009: 楼层费测试 - null楼层数")
     void testCalculateFreight_FloorSurcharge_NullFloors() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -181,6 +233,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-010: 搬运费测试")
     void testCalculateFreight_CarryFee() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -194,6 +247,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-011: 其他附加费测试")
     void testCalculateFreight_OtherSurcharge() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -207,6 +261,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-012: 综合费用计算 - 夜间+楼层+搬运")
     void testCalculateFreight_Combined_Night_Floor_Carry() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 23, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -225,6 +280,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-013: 高峰时段加价测试")
     void testCalculateFreight_PeakSurcharge() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 8, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -282,6 +338,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-018: 等候费计算")
     void testCalculateWaitFee() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         BigDecimal waitFee = freightConfigService.calculateWaitFee("小面包车", 30);
 
@@ -292,6 +349,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-019: 车辆类型不存在时返回0")
     void testCalculateFreight_UnknownVehicleType() {
         when(freightConfigRepository.findByVehicleType("大卡车")).thenReturn(null);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -304,6 +362,7 @@ class FreightConfigServiceTest {
     @DisplayName("TC-FREIGHT-020: 费用明细列表验证")
     void testCalculateFreight_FeeDetailsList() {
         when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
 
         LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 23, 0);
         FreightCalculationResult result = freightConfigService.calculateFreight(
@@ -318,5 +377,104 @@ class FreightConfigServiceTest {
         assertTrue(details.stream().anyMatch(d -> "FLOOR".equals(d.getFeeType())));
         assertTrue(details.stream().anyMatch(d -> "CARRY".equals(d.getFeeType())));
         assertTrue(details.stream().anyMatch(d -> "OTHER".equals(d.getFeeType())));
+    }
+
+    @Test
+    @DisplayName("TC-FREIGHT-021: 区域定价 - 北京区域小面包车价格")
+    void testCalculateFreight_RegionPricing_Beijing() {
+        FreightConfig bjConfig = new FreightConfig();
+        bjConfig.setRegionCode("BJ");
+        bjConfig.setVehicleType("小面包车");
+        bjConfig.setStartPrice(new BigDecimal("40"));
+        bjConfig.setStartDistance(new BigDecimal("5"));
+        bjConfig.setPricePerKm(new BigDecimal("3.5"));
+        bjConfig.setWaitPricePerMin(new BigDecimal("0.6"));
+        bjConfig.setFloorSurchargePerFloor(new BigDecimal("6"));
+        bjConfig.setPeakTimeStart("07:00");
+        bjConfig.setPeakTimeEnd("09:00");
+        bjConfig.setPeakSurchargeRate(new BigDecimal("0.20"));
+        bjConfig.setNightTimeStart("22:00");
+        bjConfig.setNightTimeEnd("06:00");
+        bjConfig.setNightSurchargeRate(new BigDecimal("0.25"));
+        bjConfig.setMinNightSurcharge(new BigDecimal("12"));
+
+        when(freightConfigRepository.findByRegionCodeAndVehicleTypeAndStatus("BJ", "小面包车", 1)).thenReturn(bjConfig);
+        mockAllBillingRulesEnabled();
+
+        LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
+        FreightCalculationResult result = freightConfigService.calculateFreight(
+                "BJ", "小面包车", 10.0, null, orderTime, null, null);
+
+        assertEquals(new BigDecimal("40.00"), result.getBaseFreight());
+        assertEquals(new BigDecimal("17.50"), result.getMileageFee());
+        assertEquals("BJ", result.getRegionCode());
+    }
+
+    @Test
+    @DisplayName("TC-FREIGHT-022: 区域定价 - 无区域配置时使用默认价格")
+    void testCalculateFreight_RegionPricing_FallbackToDefault() {
+        when(freightConfigRepository.findByRegionCodeAndVehicleTypeAndStatus("GZ", "小面包车", 1)).thenReturn(null);
+        when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockAllBillingRulesEnabled();
+
+        LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
+        FreightCalculationResult result = freightConfigService.calculateFreight(
+                "GZ", "小面包车", 5.0, null, orderTime, null, null);
+
+        assertEquals(new BigDecimal("35.00"), result.getBaseFreight());
+        assertEquals("GZ", result.getRegionCode());
+    }
+
+    @Test
+    @DisplayName("TC-FREIGHT-023: 计费规则 - 禁用夜间服务费后不收取")
+    void testCalculateFreight_BillingRuleDisabled_Night() {
+        when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockBillingRulesDisabled("NIGHT");
+
+        LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 23, 0);
+        FreightCalculationResult result = freightConfigService.calculateFreight(
+                "小面包车", 5.0, null, orderTime, null, null);
+
+        assertEquals(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP), result.getNightSurcharge());
+        assertEquals(new BigDecimal("35.00"), result.getTotalAmount());
+    }
+
+    @Test
+    @DisplayName("TC-FREIGHT-024: 计费规则 - 禁用楼层费后不收取")
+    void testCalculateFreight_BillingRuleDisabled_Floor() {
+        when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockBillingRulesDisabled("FLOOR");
+
+        LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
+        FreightCalculationResult result = freightConfigService.calculateFreight(
+                "小面包车", 5.0, 5, orderTime, null, null);
+
+        assertEquals(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP), result.getFloorSurcharge());
+        assertEquals(new BigDecimal("35.00"), result.getTotalAmount());
+    }
+
+    @Test
+    @DisplayName("TC-FREIGHT-025: 计费规则 - 禁用等候费后不收取")
+    void testCalculateWaitFee_BillingRuleDisabled() {
+        when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockBillingRulesDisabled("WAIT");
+
+        BigDecimal waitFee = freightConfigService.calculateWaitFee("小面包车", 30);
+
+        assertEquals(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP), waitFee);
+    }
+
+    @Test
+    @DisplayName("TC-FREIGHT-026: 计费规则 - 禁用搬运费后不收取")
+    void testCalculateFreight_BillingRuleDisabled_Carry() {
+        when(freightConfigRepository.findByVehicleType("小面包车")).thenReturn(smallVanConfig);
+        mockBillingRulesDisabled("CARRY");
+
+        LocalDateTime orderTime = LocalDateTime.of(2024, 6, 15, 14, 0);
+        FreightCalculationResult result = freightConfigService.calculateFreight(
+                "小面包车", 5.0, null, orderTime, new BigDecimal("80"), null);
+
+        assertEquals(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP), result.getCarryFee());
+        assertEquals(new BigDecimal("35.00"), result.getTotalAmount());
     }
 }

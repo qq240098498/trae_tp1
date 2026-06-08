@@ -2,6 +2,7 @@ package com.huolala.controller;
 
 import com.huolala.entity.FreightConfig;
 import com.huolala.service.FreightConfigService;
+import com.huolala.service.RegionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,16 +16,21 @@ public class FreightController {
     @Autowired
     private FreightConfigService freightConfigService;
 
+    @Autowired
+    private RegionService regionService;
+
     @GetMapping
     public String list(Model model) {
         List<FreightConfig> configs = freightConfigService.findAll();
         model.addAttribute("configs", configs);
+        model.addAttribute("regions", regionService.findActive());
         return "freight/list";
     }
 
     @GetMapping("/add")
     public String addForm(Model model) {
         model.addAttribute("config", new FreightConfig());
+        model.addAttribute("regions", regionService.findActive());
         return "freight/form";
     }
 
@@ -32,6 +38,7 @@ public class FreightController {
     public String editForm(@PathVariable Long id, Model model) {
         FreightConfig config = freightConfigService.findById(id);
         model.addAttribute("config", config);
+        model.addAttribute("regions", regionService.findActive());
         return "freight/form";
     }
 

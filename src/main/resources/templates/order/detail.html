@@ -16,6 +16,9 @@
                 <li><a th:href="@{/driverLevel}">等级体系</a></li>
                 <li><a th:href="@{/vehicle}">车辆管理</a></li>
                 <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/region}">区域定价</a></li>
+                <li><a th:href="@{/cancelRefundRule}">退费规则</a></li>
+                <li><a th:href="@{/billingRule}">计费规则</a></li>
                 <li><a th:href="@{/order}" class="active">订单管理</a></li>
                 <li><a th:href="@{/order/stats}">里程统计</a></li>
                 <li><a th:href="@{/salary}">薪资管理</a></li>
@@ -77,6 +80,10 @@
                             <label>目的地址：</label>
                             <span class="value" th:text="${order.endAddress}"></span>
                         </div>
+                        <div class="detail-item">
+                            <label>区域：</label>
+                            <span class="value" th:text="${regionName != null ? regionName : (order.regionCode != null ? order.regionCode : '默认')}"></span>
+                        </div>
                     </div>
                 </div>
                 <div class="card">
@@ -125,6 +132,23 @@
                         <div class="detail-item">
                             <label>司机收入：</label>
                             <span class="value" style="color: #52c41a; font-weight: bold;" th:text="'¥' + ${order.driverIncome}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" th:if="${order.status == 9}">
+                    <h3>退费信息</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>退费金额：</label>
+                            <span class="value" style="color: #ff4d4f; font-weight: bold;" th:text="'¥' + ${order.refundAmount}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>取消原因：</label>
+                            <span class="value" th:text="${order.cancelReason != null ? order.cancelReason : '-'}"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>取消时间：</label>
+                            <span class="value" th:text="${order.cancelTime != null ? #temporals.format(order.cancelTime, 'yyyy-MM-dd HH:mm:ss') : '-'}"></span>
                         </div>
                     </div>
                 </div>
@@ -231,6 +255,10 @@
                     </div>
                     <div th:if="${order.status != 4 and order.status != 9}">
                         <form th:action="@{/order/cancel/{id}(id=${order.id})}" method="post">
+                            <div class="form-group">
+                                <label>取消原因</label>
+                                <input type="text" name="cancelReason" placeholder="请输入取消原因（可选）">
+                            </div>
                             <div class="actions">
                                 <button type="submit" class="btn btn-danger" onclick="return confirm('确定取消订单吗？')">取消订单</button>
                                 <a th:href="@{/order}" class="btn btn-warning">返回列表</a>

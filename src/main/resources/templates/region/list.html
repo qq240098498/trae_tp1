@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>区域定价</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/driverLevel}">等级体系</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/order/stats}">里程统计</a></li>
+                <li><a th:href="@{/region}" class="active">区域定价</a></li>
+                <li><a th:href="@{/cancelRefundRule}">退费规则</a></li>
+                <li><a th:href="@{/billingRule}">计费规则</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+                <li><a th:href="@{/report/monthly}">月度报表</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">区域定价</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="toolbar">
+                        <h3 style="margin: 0;">区域列表</h3>
+                        <a th:href="@{/region/add}" class="btn btn-primary">+ 新增区域</a>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>区域编码</th>
+                                <th>区域名称</th>
+                                <th>上级编码</th>
+                                <th>层级</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="region : ${regions}">
+                                <td th:text="${region.regionCode}"></td>
+                                <td th:text="${region.regionName}"></td>
+                                <td th:text="${region.parentCode}"></td>
+                                <td th:text="${region.level}"></td>
+                                <td>
+                                    <span th:class="${region.status == 1 ? 'status-badge status-4' : 'status-badge status-9'}"
+                                          th:text="${region.status == 1 ? '启用' : '禁用'}"></span>
+                                </td>
+                                <td th:text="${region.createTime}"></td>
+                                <td>
+                                    <a th:href="@{/region/edit/{id}(id=${region.id})}" class="btn btn-sm btn-primary">编辑</a>
+                                    <a th:href="@{/region/delete/{id}(id=${region.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除吗？')">删除</a>
+                                </td>
+                            </tr>
+                            <tr th:if="${regions.isEmpty()}">
+                                <td colspan="7" style="text-align: center; color: #999;">暂无数据</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -16,6 +16,9 @@
                 <li><a th:href="@{/driverLevel}">等级体系</a></li>
                 <li><a th:href="@{/vehicle}">车辆管理</a></li>
                 <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/region}">区域定价</a></li>
+                <li><a th:href="@{/cancelRefundRule}">退费规则</a></li>
+                <li><a th:href="@{/billingRule}">计费规则</a></li>
                 <li><a th:href="@{/order}" class="active">订单管理</a></li>
                 <li><a th:href="@{/order/stats}">里程统计</a></li>
                 <li><a th:href="@{/salary}">薪资管理</a></li>
@@ -36,6 +39,15 @@
                 <div class="card">
                     <h3>新增订单</h3>
                     <form th:action="@{/order/save}" method="post" th:object="${order}">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>区域选择</label>
+                                <select th:field="*{regionCode}">
+                                    <option value="">请选择区域(可选)</option>
+                                    <option th:each="region : ${regions}" th:value="${region.regionCode}" th:text="${region.regionName}"></option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>客户姓名 *</label>

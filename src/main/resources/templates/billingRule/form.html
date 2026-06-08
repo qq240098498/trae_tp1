@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计费规则表单</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/driverLevel}">等级体系</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/order/stats}">里程统计</a></li>
+                <li><a th:href="@{/region}">区域定价</a></li>
+                <li><a th:href="@{/cancelRefundRule}">退费规则</a></li>
+                <li><a th:href="@{/billingRule}" class="active">计费规则</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+                <li><a th:href="@{/report/monthly}">月度报表</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">计费规则表单</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <h3 th:text="${rule.id == null} ? '新增计费规则' : '编辑计费规则'">新增计费规则</h3>
+                    <form th:action="@{/billingRule/save}" method="post" th:object="${rule}">
+                        <input type="hidden" th:field="*{id}">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>规则编码 *</label>
+                                <input type="text" th:field="*{ruleCode}" required placeholder="请输入规则编码">
+                            </div>
+                            <div class="form-group">
+                                <label>规则名称 *</label>
+                                <input type="text" th:field="*{ruleName}" required placeholder="请输入规则名称">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>规则类型 *</label>
+                                <select th:field="*{ruleType}" required>
+                                    <option value="">请选择</option>
+                                    <option value="FEE">基础费用</option>
+                                    <option value="SURCHARGE">附加费用</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>是否启用</label>
+                                <select th:field="*{enabled}">
+                                    <option value="1">启用</option>
+                                    <option value="0">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>说明</label>
+                            <textarea th:field="*{description}" rows="3" placeholder="请输入说明"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>排序</label>
+                                <input type="number" th:field="*{sortOrder}" placeholder="请输入排序值">
+                            </div>
+                            <div class="form-group">
+                                <label>状态</label>
+                                <select th:field="*{status}">
+                                    <option value="1">启用</option>
+                                    <option value="0">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <a th:href="@{/billingRule}" class="btn btn-warning">返回</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

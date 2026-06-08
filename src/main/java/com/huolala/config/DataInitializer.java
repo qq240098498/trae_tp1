@@ -1,10 +1,16 @@
 package com.huolala.config;
 
+import com.huolala.entity.BillingRuleItem;
+import com.huolala.entity.CancelRefundRule;
 import com.huolala.entity.DriverLevel;
 import com.huolala.entity.FreightConfig;
+import com.huolala.entity.Region;
 import com.huolala.entity.User;
+import com.huolala.repository.BillingRuleItemRepository;
+import com.huolala.repository.CancelRefundRuleRepository;
 import com.huolala.repository.DriverLevelRepository;
 import com.huolala.repository.FreightConfigRepository;
+import com.huolala.repository.RegionRepository;
 import com.huolala.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -22,6 +28,15 @@ public class DataInitializer implements CommandLineRunner {
 
     @Autowired
     private DriverLevelRepository driverLevelRepository;
+
+    @Autowired
+    private RegionRepository regionRepository;
+
+    @Autowired
+    private CancelRefundRuleRepository cancelRefundRuleRepository;
+
+    @Autowired
+    private BillingRuleItemRepository billingRuleItemRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -77,6 +92,45 @@ public class DataInitializer implements CommandLineRunner {
             driverLevelRepository.save(level4);
 
             System.out.println("初始化司机等级体系完成");
+        }
+
+        if (regionRepository.count() == 0) {
+            Region bj = new Region();
+            bj.setRegionCode("BJ");
+            bj.setRegionName("北京");
+            bj.setLevel(1);
+            bj.setStatus(1);
+            regionRepository.save(bj);
+
+            Region sh = new Region();
+            sh.setRegionCode("SH");
+            sh.setRegionName("上海");
+            sh.setLevel(1);
+            sh.setStatus(1);
+            regionRepository.save(sh);
+
+            Region gz = new Region();
+            gz.setRegionCode("GZ");
+            gz.setRegionName("广州");
+            gz.setLevel(1);
+            gz.setStatus(1);
+            regionRepository.save(gz);
+
+            Region sz = new Region();
+            sz.setRegionCode("SZ");
+            sz.setRegionName("深圳");
+            sz.setLevel(1);
+            sz.setStatus(1);
+            regionRepository.save(sz);
+
+            Region cd = new Region();
+            cd.setRegionCode("CD");
+            cd.setRegionName("成都");
+            cd.setLevel(1);
+            cd.setStatus(1);
+            regionRepository.save(cd);
+
+            System.out.println("初始化区域数据完成");
         }
 
         if (freightConfigRepository.count() == 0) {
@@ -152,7 +206,163 @@ public class DataInitializer implements CommandLineRunner {
             config4.setDescription("适合企业搬迁、大宗货物");
             freightConfigRepository.save(config4);
 
+            FreightConfig bjSmall = new FreightConfig();
+            bjSmall.setRegionCode("BJ");
+            bjSmall.setVehicleType("小面包车");
+            bjSmall.setStartPrice(new BigDecimal("40"));
+            bjSmall.setStartDistance(new BigDecimal("5"));
+            bjSmall.setPricePerKm(new BigDecimal("3.5"));
+            bjSmall.setWaitPricePerMin(new BigDecimal("0.6"));
+            bjSmall.setCarryPrice(new BigDecimal("60"));
+            bjSmall.setFloorSurchargePerFloor(new BigDecimal("6"));
+            bjSmall.setPeakTimeStart("07:00");
+            bjSmall.setPeakTimeEnd("09:00");
+            bjSmall.setPeakSurchargeRate(new BigDecimal("0.20"));
+            bjSmall.setNightTimeStart("22:00");
+            bjSmall.setNightTimeEnd("06:00");
+            bjSmall.setNightSurchargeRate(new BigDecimal("0.25"));
+            bjSmall.setMinNightSurcharge(new BigDecimal("12"));
+            bjSmall.setDescription("北京区域-小面包车");
+            freightConfigRepository.save(bjSmall);
+
+            FreightConfig shSmall = new FreightConfig();
+            shSmall.setRegionCode("SH");
+            shSmall.setVehicleType("小面包车");
+            shSmall.setStartPrice(new BigDecimal("42"));
+            shSmall.setStartDistance(new BigDecimal("5"));
+            shSmall.setPricePerKm(new BigDecimal("3.8"));
+            shSmall.setWaitPricePerMin(new BigDecimal("0.6"));
+            shSmall.setCarryPrice(new BigDecimal("60"));
+            shSmall.setFloorSurchargePerFloor(new BigDecimal("6"));
+            shSmall.setPeakTimeStart("07:30");
+            shSmall.setPeakTimeEnd("09:30");
+            shSmall.setPeakSurchargeRate(new BigDecimal("0.20"));
+            shSmall.setNightTimeStart("22:00");
+            shSmall.setNightTimeEnd("06:00");
+            shSmall.setNightSurchargeRate(new BigDecimal("0.25"));
+            shSmall.setMinNightSurcharge(new BigDecimal("12"));
+            shSmall.setDescription("上海区域-小面包车");
+            freightConfigRepository.save(shSmall);
+
             System.out.println("初始化运价配置完成");
+        }
+
+        if (cancelRefundRuleRepository.count() == 0) {
+            CancelRefundRule rule0 = new CancelRefundRule();
+            rule0.setRuleName("待接单取消-全额退款");
+            rule0.setFromStatus(0);
+            rule0.setToStatus(9);
+            rule0.setRefundRate(new BigDecimal("1.0000"));
+            rule0.setDescription("司机未接单前取消，全额退款");
+            rule0.setSortOrder(1);
+            rule0.setStatus(1);
+            cancelRefundRuleRepository.save(rule0);
+
+            CancelRefundRule rule1 = new CancelRefundRule();
+            rule1.setRuleName("已接单取消-退还80%");
+            rule1.setFromStatus(1);
+            rule1.setToStatus(9);
+            rule1.setRefundRate(new BigDecimal("0.8000"));
+            rule1.setDescription("司机已接单但未到达，退还80%");
+            rule1.setSortOrder(2);
+            rule1.setStatus(1);
+            cancelRefundRuleRepository.save(rule1);
+
+            CancelRefundRule rule2 = new CancelRefundRule();
+            rule2.setRuleName("已到达取消-退还50%");
+            rule2.setFromStatus(2);
+            rule2.setToStatus(9);
+            rule2.setRefundRate(new BigDecimal("0.5000"));
+            rule2.setDescription("司机已到达后取消，退还50%");
+            rule2.setSortOrder(3);
+            rule2.setStatus(1);
+            cancelRefundRuleRepository.save(rule2);
+
+            System.out.println("初始化取消退费规则完成");
+        }
+
+        if (billingRuleItemRepository.count() == 0) {
+            BillingRuleItem base = new BillingRuleItem();
+            base.setRuleCode("BASE");
+            base.setRuleName("起步价");
+            base.setRuleType("FEE");
+            base.setEnabled(1);
+            base.setDescription("基础起步价，包含起步里程");
+            base.setSortOrder(1);
+            base.setStatus(1);
+            billingRuleItemRepository.save(base);
+
+            BillingRuleItem mileage = new BillingRuleItem();
+            mileage.setRuleCode("MILEAGE");
+            mileage.setRuleName("里程费");
+            mileage.setRuleType("FEE");
+            mileage.setEnabled(1);
+            mileage.setDescription("超出起步里程后的按公里计费");
+            mileage.setSortOrder(2);
+            mileage.setStatus(1);
+            billingRuleItemRepository.save(mileage);
+
+            BillingRuleItem peak = new BillingRuleItem();
+            peak.setRuleCode("PEAK");
+            peak.setRuleName("高峰时段加价");
+            peak.setRuleType("SURCHARGE");
+            peak.setEnabled(1);
+            peak.setDescription("高峰时段按比例加价");
+            peak.setSortOrder(3);
+            peak.setStatus(1);
+            billingRuleItemRepository.save(peak);
+
+            BillingRuleItem night = new BillingRuleItem();
+            night.setRuleCode("NIGHT");
+            night.setRuleName("夜间服务费");
+            night.setRuleType("SURCHARGE");
+            night.setEnabled(1);
+            night.setDescription("夜间时段加收服务费");
+            night.setSortOrder(4);
+            night.setStatus(1);
+            billingRuleItemRepository.save(night);
+
+            BillingRuleItem floor = new BillingRuleItem();
+            floor.setRuleCode("FLOOR");
+            floor.setRuleName("楼层费");
+            floor.setRuleType("SURCHARGE");
+            floor.setEnabled(1);
+            floor.setDescription("无电梯楼层搬运费");
+            floor.setSortOrder(5);
+            floor.setStatus(1);
+            billingRuleItemRepository.save(floor);
+
+            BillingRuleItem carry = new BillingRuleItem();
+            carry.setRuleCode("CARRY");
+            carry.setRuleName("搬运费");
+            carry.setRuleType("FEE");
+            carry.setEnabled(1);
+            carry.setDescription("人工搬运服务费");
+            carry.setSortOrder(6);
+            carry.setStatus(1);
+            billingRuleItemRepository.save(carry);
+
+            BillingRuleItem wait = new BillingRuleItem();
+            wait.setRuleCode("WAIT");
+            wait.setRuleName("等候费");
+            wait.setRuleType("FEE");
+            wait.setEnabled(1);
+            wait.setDescription("超时等候按分钟计费");
+            wait.setSortOrder(7);
+            wait.setStatus(1);
+            billingRuleItemRepository.save(wait);
+
+            BillingRuleItem other = new BillingRuleItem();
+            other.setRuleCode("OTHER");
+            other.setRuleName("其他附加费");
+            other.setRuleType("SURCHARGE");
+            other.setEnabled(1);
+            other.setDescription("其他附加服务费用");
+            other.setSortOrder(8);
+            other.setStatus(1);
+            billingRuleItemRepository.save(other);
+
+            System.out.println("初始化计费规则配置完成");
         }
     }
 }

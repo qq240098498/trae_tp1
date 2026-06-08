@@ -16,6 +16,9 @@
                 <li><a th:href="@{/driverLevel}">等级体系</a></li>
                 <li><a th:href="@{/vehicle}">车辆管理</a></li>
                 <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/region}">区域定价</a></li>
+                <li><a th:href="@{/cancelRefundRule}">退费规则</a></li>
+                <li><a th:href="@{/billingRule}">计费规则</a></li>
                 <li><a th:href="@{/order}" class="active">订单管理</a></li>
                 <li><a th:href="@{/order/stats}">里程统计</a></li>
                 <li><a th:href="@{/salary}">薪资管理</a></li>
@@ -44,6 +47,7 @@
                                 <th>订单号</th>
                                 <th>客户</th>
                                 <th>车型</th>
+                                <th>区域</th>
                                 <th>里程(公里)</th>
                                 <th>总金额</th>
                                 <th>司机</th>
@@ -57,6 +61,7 @@
                                 <td th:text="${order.orderNo}"></td>
                                 <td th:text="${order.customerName}"></td>
                                 <td th:text="${order.vehicleType}"></td>
+                                <td th:text="${order.regionCode != null ? order.regionCode : '默认'}"></td>
                                 <td th:text="${order.distance}"></td>
                                 <td th:text="${order.totalAmount}"></td>
                                 <td th:text="${order.driver != null ? order.driver.name : '未分配'}"></td>
@@ -75,7 +80,7 @@
                                 </td>
                             </tr>
                             <tr th:if="${orders.isEmpty()}">
-                                <td colspan="9" style="text-align: center; color: #999;">暂无数据</td>
+                                <td colspan="10" style="text-align: center; color: #999;">暂无数据</td>
                             </tr>
                         </tbody>
                     </table>

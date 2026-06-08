@@ -7,6 +7,7 @@ import com.huolala.service.DriverService;
 import com.huolala.service.FreightConfigService;
 import com.huolala.service.OrderFeeDetailService;
 import com.huolala.service.OrderService;
+import com.huolala.service.RegionService;
 import com.huolala.service.VehicleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -32,6 +33,8 @@ public class OrderController {
     private FreightConfigService freightConfigService;
     @Autowired
     private OrderFeeDetailService orderFeeDetailService;
+    @Autowired
+    private RegionService regionService;
 
     @GetMapping
     public String list(Model model) {
@@ -44,6 +47,7 @@ public class OrderController {
     public String addForm(Model model) {
         model.addAttribute("order", new Order());
         model.addAttribute("freightConfigs", freightConfigService.findActive());
+        model.addAttribute("regions", regionService.findActive());
         return "order/form";
     }
 
@@ -55,6 +59,12 @@ public class OrderController {
         model.addAttribute("vehicles", vehicleService.findActive());
         List<OrderFeeDetail> feeDetails = orderFeeDetailService.findByOrderId(id);
         model.addAttribute("feeDetails", feeDetails);
+        if (order.getRegionCode() != null) {
+            model.addAttribute("regionName",
+                    regionService.findByRegionCode(order.getRegionCode()) != null
+                            ? regionService.findByRegionCode(order.getRegionCode()).getRegionName()
+                            : order.getRegionCode());
+        }
         return "order/detail";
     }
 
@@ -121,9 +131,10 @@ public class OrderController {
     }
 
     @PostMapping("/cancel/{id}")
-    public String cancel(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String cancel(@PathVariable Long id, @RequestParam(required = false) String cancelReason,
+                         RedirectAttributes redirectAttributes) {
         try {
-            orderService.cancelOrder(id);
+            orderService.cancelOrder(id, cancelReason);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

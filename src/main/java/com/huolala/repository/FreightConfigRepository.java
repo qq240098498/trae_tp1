@@ -10,4 +10,7 @@ import java.util.List;
 public interface FreightConfigRepository extends JpaRepository<FreightConfig, Long> {
     List<FreightConfig> findByStatus(Integer status);
     FreightConfig findByVehicleType(String vehicleType);
+    FreightConfig findByRegionCodeAndVehicleTypeAndStatus(String regionCode, String vehicleType, Integer status);
+    List<FreightConfig> findByRegionCodeAndStatus(String regionCode, Integer status);
+    List<FreightConfig> findByRegionCodeIsNullAndStatus(Integer status);
 }

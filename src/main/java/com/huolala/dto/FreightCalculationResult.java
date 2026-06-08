@@ -9,6 +9,7 @@ import java.util.List;
 
 @Data
 public class FreightCalculationResult {
+    private String regionCode;
     private BigDecimal baseFreight;
     private BigDecimal mileageFee;
     private BigDecimal timeSlotSurcharge;

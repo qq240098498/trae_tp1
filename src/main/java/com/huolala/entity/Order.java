@@ -16,6 +16,9 @@ public class Order {
     @Column(unique = true, nullable = false)
     private String orderNo;
 
+    @Column(length = 50)
+    private String regionCode;
+
     private String customerName;
 
     private String customerPhone;
@@ -72,6 +75,14 @@ public class Order {
     private Integer status;
 
     private String remark;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal refundAmount;
+
+    @Column(length = 200)
+    private String cancelReason;
+
+    private LocalDateTime cancelTime;
 
     private LocalDateTime orderTime;
 

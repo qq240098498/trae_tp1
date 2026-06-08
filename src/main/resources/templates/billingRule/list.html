@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计费规则</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/driverLevel}">等级体系</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/order/stats}">里程统计</a></li>
+                <li><a th:href="@{/region}">区域定价</a></li>
+                <li><a th:href="@{/cancelRefundRule}">退费规则</a></li>
+                <li><a th:href="@{/billingRule}" class="active">计费规则</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+                <li><a th:href="@{/report/monthly}">月度报表</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">计费规则</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="toolbar">
+                        <h3 style="margin: 0;">计费规则列表</h3>
+                        <a th:href="@{/billingRule/add}" class="btn btn-primary">+ 新增规则</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>规则编码</th>
+                                <th>规则名称</th>
+                                <th>规则类型</th>
+                                <th>是否启用</th>
+                                <th>说明</th>
+                                <th>排序</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="rule : ${rules}">
+                                <td th:text="${rule.ruleCode}"></td>
+                                <td th:text="${rule.ruleName}"></td>
+                                <td>
+                                    <span th:if="${rule.ruleType == 'FEE'}">基础费用</span>
+                                    <span th:if="${rule.ruleType == 'SURCHARGE'}">附加费用</span>
+                                </td>
+                                <td>
+                                    <span th:class="${rule.enabled == 1 ? 'badge badge-success' : 'badge badge-danger'}"
+                                          th:text="${rule.enabled == 1 ? '启用' : '禁用'}"></span>
+                                </td>
+                                <td th:text="${rule.description}"></td>
+                                <td th:text="${rule.sortOrder}"></td>
+                                <td>
+                                    <a th:href="@{/billingRule/toggle/{id}(id=${rule.id})}"
+                                       th:text="${rule.enabled == 1 ? '禁用' : '启用'}"
+                                       class="btn btn-sm btn-warning"></a>
+                                    <a th:href="@{/billingRule/edit/{id}(id=${rule.id})}" class="btn btn-sm btn-primary">编辑</a>
+                                    <a th:href="@{/billingRule/delete/{id}(id=${rule.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除吗？')">删除</a>
+                                </td>
+                            </tr>
+                            <tr th:if="${rules.isEmpty()}">
+                                <td colspan="7" style="text-align: center; color: #999;">暂无数据</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -2,8 +2,12 @@ package com.huolala.service;
 
 import com.huolala.dto.DriverMileageStats;
 import com.huolala.dto.FreightCalculationResult;
+import com.huolala.entity.BillingRuleItem;
+import com.huolala.entity.CancelRefundRule;
 import com.huolala.entity.Driver;
 import com.huolala.entity.Order;
+import com.huolala.repository.BillingRuleItemRepository;
+import com.huolala.repository.CancelRefundRuleRepository;
 import com.huolala.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -43,6 +48,9 @@ class OrderServiceTest {
 
     @Mock
     private VehicleService vehicleService;
+
+    @Mock
+    private CancelRefundRuleRepository cancelRefundRuleRepository;
 
     @InjectMocks
     private OrderService orderService;
@@ -222,7 +230,7 @@ class OrderServiceTest {
 
         when(freightConfigService.getTimeSlotType(any(), eq("小面包车"))).thenReturn("NIGHT");
         when(freightConfigService.calculateFreight(
-                eq("小面包车"), eq(10.0), eq(3), any(), eq(new BigDecimal("50")), eq(new BigDecimal("20"))))
+                isNull(), eq("小面包车"), eq(10.0), eq(3), any(), eq(new BigDecimal("50")), eq(new BigDecimal("20"))))
                 .thenReturn(calcResult);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order saved = invocation.getArgument(0);
@@ -256,9 +264,9 @@ class OrderServiceTest {
         calcResult.setNightSurcharge(BigDecimal.ZERO);
         calcResult.calculateTotal();
 
-        when(freightConfigService.getTimeSlotType(any(), eq("小面包车"))).thenReturn("NORMAL");
+        when(freightConfigService.getTimeSlotType(isNull(), any(), eq("小面包车"))).thenReturn("NORMAL");
         when(freightConfigService.calculateFreight(
-                eq("小面包车"), eq(5.0), isNull(), any(), isNull(), isNull()))
+                isNull(), eq("小面包车"), eq(5.0), isNull(), any(), isNull(), isNull()))
                 .thenReturn(calcResult);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order saved = invocation.getArgument(0);
@@ -283,9 +291,9 @@ class OrderServiceTest {
         order.setTotalAmount(new BigDecimal("100"));
         order.setDriverIncome(new BigDecimal("80"));
 
-        when(orderRepository.findById(1L)).thenReturn(java.util.Optional.of(order));
-        when(freightConfigService.calculateWaitFee("小面包车", 20)).thenReturn(new BigDecimal("10.00"));
-        when(freightConfigService.createWaitFeeDetail(eq(1L), eq("小面包车"), eq(20)))
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(freightConfigService.calculateWaitFee(isNull(), eq("小面包车"), eq(20))).thenReturn(new BigDecimal("10.00"));
+        when(freightConfigService.createWaitFeeDetail(isNull(), eq(1L), eq("小面包车"), eq(20)))
                 .thenReturn(new com.huolala.entity.OrderFeeDetail());
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -307,7 +315,7 @@ class OrderServiceTest {
         order.setTotalAmount(new BigDecimal("100"));
         order.setDriverIncome(new BigDecimal("80"));
 
-        when(orderRepository.findById(1L)).thenReturn(java.util.Optional.of(order));
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Order result = orderService.completeOrder(1L, null);
@@ -316,5 +324,113 @@ class OrderServiceTest {
         assertNull(result.getWaitMinutes());
         assertEquals(BigDecimal.ZERO.setScale(2), result.getWaitFee());
         assertEquals(new BigDecimal("100"), result.getTotalAmount());
+    }
+
+    @Test
+    @DisplayName("TC-ORDER-005: 取消订单 - 待接单状态全额退费")
+    void testCancelOrder_PendingStatus_FullRefund() {
+        Order order = new Order();
+        order.setId(1L);
+        order.setStatus(0);
+        order.setTotalAmount(new BigDecimal("100"));
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        doNothing().when(orderFeeDetailService).save(any(com.huolala.entity.OrderFeeDetail.class));
+
+        Order result = orderService.cancelOrder(1L, "不想用了");
+
+        assertEquals(9, result.getStatus());
+        assertEquals(new BigDecimal("100.00"), result.getRefundAmount());
+        assertEquals("不想用了", result.getCancelReason());
+        assertNotNull(result.getCancelTime());
+    }
+
+    @Test
+    @DisplayName("TC-ORDER-006: 取消订单 - 已接单状态按退费规则退费80%")
+    void testCancelOrder_AcceptedStatus_RefundByRule() {
+        Order order = new Order();
+        order.setId(1L);
+        order.setStatus(1);
+        order.setTotalAmount(new BigDecimal("100"));
+
+        CancelRefundRule rule = new CancelRefundRule();
+        rule.setFromStatus(1);
+        rule.setToStatus(9);
+        rule.setRefundRate(new BigDecimal("0.8000"));
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(cancelRefundRuleRepository.findByFromStatusAndToStatusAndStatus(1, 9, 1)).thenReturn(rule);
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        doNothing().when(orderFeeDetailService).save(any(com.huolala.entity.OrderFeeDetail.class));
+
+        Order result = orderService.cancelOrder(1L, "司机太慢");
+
+        assertEquals(9, result.getStatus());
+        assertEquals(new BigDecimal("80.00"), result.getRefundAmount());
+        assertEquals("司机太慢", result.getCancelReason());
+    }
+
+    @Test
+    @DisplayName("TC-ORDER-007: 取消订单 - 已到达状态默认退费50%")
+    void testCancelOrder_ArrivedStatus_DefaultRefund50() {
+        Order order = new Order();
+        order.setId(1L);
+        order.setStatus(2);
+        order.setTotalAmount(new BigDecimal("100"));
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(cancelRefundRuleRepository.findByFromStatusAndToStatusAndStatus(2, 9, 1)).thenReturn(null);
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        doNothing().when(orderFeeDetailService).save(any(com.huolala.entity.OrderFeeDetail.class));
+
+        Order result = orderService.cancelOrder(1L, null);
+
+        assertEquals(9, result.getStatus());
+        assertEquals(new BigDecimal("50.00"), result.getRefundAmount());
+        assertNull(result.getCancelReason());
+    }
+
+    @Test
+    @DisplayName("TC-ORDER-008: 取消订单 - 已完成订单不可取消")
+    void testCancelOrder_CompletedOrder_ThrowsException() {
+        Order order = new Order();
+        order.setId(1L);
+        order.setStatus(4);
+        order.setTotalAmount(new BigDecimal("100"));
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+        assertThrows(RuntimeException.class, () -> orderService.cancelOrder(1L, "reason"));
+    }
+
+    @Test
+    @DisplayName("TC-ORDER-009: 创建订单 - 带区域编码")
+    void testCreateOrder_WithRegionCode() {
+        Order order = new Order();
+        order.setRegionCode("BJ");
+        order.setVehicleType("小面包车");
+        order.setDistance(10.0);
+
+        FreightCalculationResult calcResult = new FreightCalculationResult();
+        calcResult.setBaseFreight(new BigDecimal("40"));
+        calcResult.setMileageFee(new BigDecimal("17.50"));
+        calcResult.calculateTotal();
+
+        when(freightConfigService.getTimeSlotType(eq("BJ"), any(), eq("小面包车"))).thenReturn("NORMAL");
+        when(freightConfigService.calculateFreight(
+                eq("BJ"), eq("小面包车"), eq(10.0), isNull(), any(), isNull(), isNull()))
+                .thenReturn(calcResult);
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order saved = invocation.getArgument(0);
+            saved.setId(1L);
+            return saved;
+        });
+        doNothing().when(orderFeeDetailService).saveBatch(anyList());
+
+        Order result = orderService.createOrder(order);
+
+        assertEquals("BJ", result.getRegionCode());
+        assertEquals(new BigDecimal("57.50"), result.getFreight());
     }
 }
