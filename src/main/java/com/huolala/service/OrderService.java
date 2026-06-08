@@ -38,6 +38,9 @@ public class OrderService {
     @Autowired
     private DriverStatsRedisService driverStatsRedisService;
 
+    @Autowired
+    private DriverLevelService driverLevelService;
+
     private final Random random = new Random();
 
     public List<Order> findAll() {
@@ -58,6 +61,18 @@ public class OrderService {
 
     public List<Order> findByDriverId(Long driverId) {
         return orderRepository.findByDriverId(driverId);
+    }
+
+    private BigDecimal getCommissionRate(Driver driver) {
+        if (driver != null && driver.getLevelCode() != null) {
+            return driverLevelService.getCommissionRateByLevelCode(driver.getLevelCode());
+        }
+        return new BigDecimal("0.70");
+    }
+
+    private BigDecimal calculateDriverIncome(Order order, Driver driver) {
+        BigDecimal commissionRate = getCommissionRate(driver);
+        return order.getTotalAmount().multiply(commissionRate).setScale(2, BigDecimal.ROUND_HALF_UP);
     }
 
     @Transactional
@@ -88,8 +103,13 @@ public class OrderService {
         order.setWaitMinutes(0);
         order.setTotalAmount(calcResult.getTotalAmount());
 
-        BigDecimal driverIncome = order.getTotalAmount().multiply(new BigDecimal("0.80"));
-        order.setDriverIncome(driverIncome.setScale(2, BigDecimal.ROUND_HALF_UP));
+        if (order.getDriver() != null) {
+            BigDecimal driverIncome = calculateDriverIncome(order, order.getDriver());
+            order.setDriverIncome(driverIncome);
+        } else {
+            BigDecimal driverIncome = order.getTotalAmount().multiply(new BigDecimal("0.70"));
+            order.setDriverIncome(driverIncome.setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
 
         Order savedOrder = orderRepository.save(order);
 
@@ -115,6 +135,9 @@ public class OrderService {
         order.setVehicle(vehicle);
         order.setStatus(1);
         order.setAcceptTime(LocalDateTime.now());
+
+        BigDecimal driverIncome = calculateDriverIncome(order, driver);
+        order.setDriverIncome(driverIncome);
 
         return orderRepository.save(order);
     }
@@ -144,13 +167,14 @@ public class OrderService {
             BigDecimal waitFee = freightConfigService.calculateWaitFee(order.getVehicleType(), waitMinutes);
             order.setWaitFee(waitFee);
             order.setTotalAmount(order.getTotalAmount().add(waitFee));
-            BigDecimal driverIncome = order.getTotalAmount().multiply(new BigDecimal("0.80"));
-            order.setDriverIncome(driverIncome.setScale(2, BigDecimal.ROUND_HALF_UP));
 
             OrderFeeDetail waitDetail = freightConfigService.createWaitFeeDetail(
                     orderId, order.getVehicleType(), waitMinutes);
             orderFeeDetailService.save(waitDetail);
         }
+
+        BigDecimal driverIncome = calculateDriverIncome(order, order.getDriver());
+        order.setDriverIncome(driverIncome);
 
         order.setStatus(4);
         order.setCompleteTime(LocalDateTime.now());

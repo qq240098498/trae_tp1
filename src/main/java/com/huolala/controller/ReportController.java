@@ -1,9 +1,8 @@
 package com.huolala.controller;
 
-import com.huolala.common.Result;
-import com.huolala.dto.DriverMileageStats;
 import com.huolala.dto.DriverPerformanceDetail;
 import com.huolala.dto.MonthlyPerformanceReport;
+import com.huolala.dto.MonthlyPerformanceReport.LevelDistribution;
 import com.huolala.entity.Driver;
 import com.huolala.entity.DriverLevel;
 import com.huolala.entity.Order;
@@ -13,26 +12,28 @@ import com.huolala.service.DriverService;
 import com.huolala.service.OrderService;
 import com.huolala.service.SalaryService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RestController
-@RequestMapping("/api")
-public class ApiController extends BaseController {
+@Controller
+@RequestMapping("/report")
+public class ReportController {
+    @Autowired
+    private DriverService driverService;
 
     @Autowired
     private OrderService orderService;
-
-    @Autowired
-    private DriverService driverService;
 
     @Autowired
     private SalaryService salaryService;
@@ -40,56 +41,12 @@ public class ApiController extends BaseController {
     @Autowired
     private DriverLevelService driverLevelService;
 
-    @GetMapping("/dashboard")
-    public Result<Map<String, Object>> dashboard() {
-        Map<String, Object> data = new HashMap<>();
-        data.put("driverCount", driverService.findAll().size());
-        data.put("orderCount", orderService.findAll().size());
-        data.put("pendingOrderCount", orderService.findByStatus(0).size());
-        return success(data);
-    }
-
-    @GetMapping("/orders")
-    public Result<List<Order>> getOrders() {
-        List<Order> orders = orderService.findAll();
-        return success(orders);
-    }
-
-    @GetMapping("/orders/{id}")
-    public Result<Order> getOrder(@PathVariable Long id) {
-        Order order = orderService.findById(id);
-        if (order == null) {
-            return error(404, "订单不存在");
-        }
-        return success(order);
-    }
-
-    @GetMapping("/stats/driver-mileage")
-    public Result<List<DriverMileageStats>> getDriverMileageStats(
-            @RequestParam(required = false) String month,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortOrder) {
-
+    @GetMapping("/monthly")
+    public String monthlyReport(Model model, @RequestParam(required = false) String month) {
         if (month == null || month.isEmpty()) {
-            month = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            month = YearMonth.now().toString();
         }
-        if (sortBy == null || sortBy.isEmpty()) {
-            sortBy = "totalMileage";
-        }
-        if (sortOrder == null || sortOrder.isEmpty()) {
-            sortOrder = "desc";
-        }
-
-        List<DriverMileageStats> stats = orderService.getDriverMileageStats(month, sortBy, sortOrder);
-        return success(stats);
-    }
-
-    @GetMapping("/report/monthly")
-    public Result<MonthlyPerformanceReport> getMonthlyReport(
-            @RequestParam(required = false) String month) {
-        if (month == null || month.isEmpty()) {
-            month = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-        }
+        model.addAttribute("month", month);
 
         List<Driver> allDrivers = driverService.findAll();
         List<Salary> salaries = salaryService.findByMonth(month);
@@ -121,6 +78,7 @@ public class ApiController extends BaseController {
             if (driver.getLevelCode() != null) {
                 driverLevel = driverLevelService.findByLevelCode(driver.getLevelCode());
             }
+
             if (driverLevel != null) {
                 detail.setLevelName(driverLevel.getLevelName());
                 detail.setCommissionRate(driverLevel.getCommissionRate());
@@ -131,6 +89,7 @@ public class ApiController extends BaseController {
 
             List<Order> orders = orderService.findCompletedOrdersByDriverAndMonth(driver.getId(), month);
             Integer orderCount = orders.size();
+
             detail.setOrderCount(orderCount);
 
             double totalMileage = orders.stream()
@@ -183,13 +142,22 @@ public class ApiController extends BaseController {
             details.add(detail);
         }
 
-        List<MonthlyPerformanceReport.LevelDistribution> levelDistributions = new ArrayList<>();
+        details.sort((d1, d2) -> {
+            int c = Integer.compare(
+                    d2.getOrderCount() != null ? d2.getOrderCount() : 0,
+                    d1.getOrderCount() != null ? d1.getOrderCount() : 0);
+            if (c != 0) return c;
+            return d2.getTotalSalary().compareTo(d1.getTotalSalary());
+        });
+
+        List<LevelDistribution> levelDistributions = new ArrayList<>();
         for (Map.Entry<String, List<DriverPerformanceDetail>> entry : levelGroupMap.entrySet()) {
-            MonthlyPerformanceReport.LevelDistribution dist = new MonthlyPerformanceReport.LevelDistribution();
+            LevelDistribution dist = new LevelDistribution();
             dist.setLevelName(entry.getKey());
             dist.setDriverCount(entry.getValue().size());
             if (!entry.getValue().isEmpty()) {
-                dist.setCommissionRate(entry.getValue().get(0).getCommissionRate());
+                BigDecimal rate = entry.getValue().get(0).getCommissionRate();
+                dist.setCommissionRate(rate);
                 BigDecimal avg = entry.getValue().stream()
                         .map(DriverPerformanceDetail::getTotalSalary)
                         .reduce(BigDecimal.ZERO, BigDecimal::add)
@@ -198,6 +166,7 @@ public class ApiController extends BaseController {
             }
             levelDistributions.add(dist);
         }
+        levelDistributions.sort((a, b) -> Integer.compare(b.getDriverCount(), a.getDriverCount()));
 
         MonthlyPerformanceReport report = new MonthlyPerformanceReport();
         report.setMonth(month);
@@ -213,6 +182,9 @@ public class ApiController extends BaseController {
         report.setDriverDetails(details);
         report.setLevelDistributions(levelDistributions);
 
-        return success(report);
+        model.addAttribute("report", report);
+        model.addAttribute("levels", driverLevelService.findAll());
+
+        return "report/monthly";
     }
 }

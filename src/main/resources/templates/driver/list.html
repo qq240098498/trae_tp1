@@ -13,11 +13,13 @@
             <ul>
                 <li><a th:href="@{/}">控制台</a></li>
                 <li><a th:href="@{/driver}" class="active">司机管理</a></li>
+                <li><a th:href="@{/driverLevel}">等级体系</a></li>
                 <li><a th:href="@{/vehicle}">车辆管理</a></li>
                 <li><a th:href="@{/freight}">运价配置</a></li>
                 <li><a th:href="@{/order}">订单管理</a></li>
                 <li><a th:href="@{/order/stats}">里程统计</a></li>
                 <li><a th:href="@{/salary}">薪资管理</a></li>
+                <li><a th:href="@{/report/monthly}">月度报表</a></li>
             </ul>
         </div>
         <div class="main">
@@ -43,6 +45,8 @@
                                 <th>姓名</th>
                                 <th>手机号</th>
                                 <th>驾照类型</th>
+                                <th>等级</th>
+                                <th>提成率</th>
                                 <th>底薪</th>
                                 <th>状态</th>
                                 <th>创建时间</th>
@@ -55,6 +59,20 @@
                                 <td th:text="${driver.name}"></td>
                                 <td th:text="${driver.phone}"></td>
                                 <td th:text="${driver.licenseType}"></td>
+                                <td>
+                                    <span th:each="level : ${levels}" th:if="${level.levelCode == driver.levelCode}">
+                                        <span th:if="${level.levelCode == 1}" class="badge badge-bronze" th:text="${level.levelName}"></span>
+                                        <span th:if="${level.levelCode == 2}" class="badge badge-silver" th:text="${level.levelName}"></span>
+                                        <span th:if="${level.levelCode == 3}" class="badge badge-gold" th:text="${level.levelName}"></span>
+                                        <span th:if="${level.levelCode == 4}" style="background: linear-gradient(135deg, #b9f2ff, #00d4ff); padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: bold; color: #005577;" th:text="${level.levelName}"></span>
+                                        <span th:if="${level.levelCode > 4}" class="badge badge-dark" th:text="${level.levelName}"></span>
+                                    </span>
+                                    <span th:if="${driver.levelCode == null}" class="badge badge-warning">未定级</span>
+                                </td>
+                                <td>
+                                    <span th:each="level : ${levels}" th:if="${level.levelCode == driver.levelCode}" style="color: #52c41a;" th:text="${#numbers.formatPercent(level.commissionRate, 1, 2)}"></span>
+                                    <span th:if="${driver.levelCode == null}" style="color: #999;">-</span>
+                                </td>
                                 <td th:text="${driver.baseSalary}"></td>
                                 <td>
                                     <span th:class="${driver.status == 1 ? 'status-badge status-4' : 'status-badge status-9'}"
@@ -67,7 +85,7 @@
                                 </td>
                             </tr>
                             <tr th:if="${drivers.isEmpty()}">
-                                <td colspan="8" style="text-align: center; color: #999;">暂无数据</td>
+                                <td colspan="10" style="text-align: center; color: #999;">暂无数据</td>
                             </tr>
                         </tbody>
                     </table>

@@ -12,12 +12,14 @@
             <div class="logo">货拉拉管理系统</div>
             <ul>
                 <li><a th:href="@{/}" th:classappend="${#request.requestURI == '/' ? 'active' : ''}">控制台</a></li>
-                <li><a th:href="@{/driver}" th:classappend="${#request.requestURI.startsWith('/driver') ? 'active' : ''}">司机管理</a></li>
+                <li><a th:href="@{/driver}" th:classappend="${#request.requestURI.startsWith('/driver') and not #request.requestURI.startsWith('/driverLevel') ? 'active' : ''}">司机管理</a></li>
+                <li><a th:href="@{/driverLevel}" th:classappend="${#request.requestURI.startsWith('/driverLevel') ? 'active' : ''}">等级体系</a></li>
                 <li><a th:href="@{/vehicle}" th:classappend="${#request.requestURI.startsWith('/vehicle') ? 'active' : ''}">车辆管理</a></li>
                 <li><a th:href="@{/freight}" th:classappend="${#request.requestURI.startsWith('/freight') ? 'active' : ''}">运价配置</a></li>
                 <li><a th:href="@{/order}" th:classappend="${#request.requestURI.startsWith('/order') and not #request.requestURI.startsWith('/order/stats') ? 'active' : ''}">订单管理</a></li>
                 <li><a th:href="@{/order/stats}" th:classappend="${#request.requestURI.startsWith('/order/stats') ? 'active' : ''}">里程统计</a></li>
                 <li><a th:href="@{/salary}" th:classappend="${#request.requestURI.startsWith('/salary') ? 'active' : ''}">薪资管理</a></li>
+                <li><a th:href="@{/report/monthly}" th:classappend="${#request.requestURI.startsWith('/report/monthly') ? 'active' : ''}">月度报表</a></li>
             </ul>
         </div>
         <div class="main">

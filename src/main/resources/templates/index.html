@@ -8,11 +8,13 @@
             <ul>
                 <li><a th:href="@{/}" class="active">控制台</a></li>
                 <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/driverLevel}">等级体系</a></li>
                 <li><a th:href="@{/vehicle}">车辆管理</a></li>
                 <li><a th:href="@{/freight}">运价配置</a></li>
                 <li><a th:href="@{/order}">订单管理</a></li>
                 <li><a th:href="@{/order/stats}">里程统计</a></li>
                 <li><a th:href="@{/salary}">薪资管理</a></li>
+                <li><a th:href="@{/report/monthly}">月度报表</a></li>
             </ul>
         </div>
         <div class="main">
@@ -116,12 +118,14 @@
                     <div style="color: #666; line-height: 1.8;">
                         <p>欢迎使用货拉拉Web管理系统，本系统包含以下功能模块：</p>
                         <ul style="margin-left: 20px; margin-top: 10px;">
-                            <li><strong>司机管理</strong>：管理司机信息，包括基本信息、驾照信息、底薪等</li>
+                            <li><strong>司机管理</strong>：管理司机信息，包括基本信息、驾照信息、底薪、等级等</li>
+                            <li><strong>等级体系</strong>：配置司机等级，不同等级享受不同提成比例和等级奖金</li>
                             <li><strong>车辆管理</strong>：管理车辆信息，包括车牌号、车型、载重、关联司机等</li>
                             <li><strong>运价配置</strong>：配置不同车型的运价规则，包括起步价、里程价、等候费、时段加价等</li>
                             <li><strong>订单管理</strong>：订单全流程管理，支持按车型、里程、时段、附加费自动计费</li>
                             <li><strong>里程统计</strong>：员工里程统计看板，支持多维度排序和排行榜展示</li>
-                            <li><strong>薪资管理</strong>：自动核算司机薪资，包括底薪、订单提成、奖金等</li>
+                            <li><strong>薪资管理</strong>：自动核算司机薪资，根据等级阶梯提成，包括底薪、订单提成、等级奖金等</li>
+                            <li><strong>月度报表</strong>：月度业绩报表，汇总等级分布、司机业绩、薪资支出等</li>
                         </ul>
                     </div>
                 </div>

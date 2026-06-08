@@ -1,7 +1,9 @@
 package com.huolala.config;
 
+import com.huolala.entity.DriverLevel;
 import com.huolala.entity.FreightConfig;
 import com.huolala.entity.User;
+import com.huolala.repository.DriverLevelRepository;
 import com.huolala.repository.FreightConfigRepository;
 import com.huolala.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,9 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private FreightConfigRepository freightConfigRepository;
 
+    @Autowired
+    private DriverLevelRepository driverLevelRepository;
+
     @Override
     public void run(String... args) throws Exception {
         if (userRepository.findByUsername("admin") == null) {
@@ -28,6 +33,50 @@ public class DataInitializer implements CommandLineRunner {
             admin.setRole("ADMIN");
             userRepository.save(admin);
             System.out.println("创建默认管理员账号: admin/123456");
+        }
+
+        if (driverLevelRepository.count() == 0) {
+            DriverLevel level1 = new DriverLevel();
+            level1.setLevelCode(1);
+            level1.setLevelName("实习司机");
+            level1.setMinOrders(0);
+            level1.setMaxOrders(29);
+            level1.setCommissionRate(new BigDecimal("0.70"));
+            level1.setLevelBonus(BigDecimal.ZERO);
+            level1.setDescription("新入职司机，0-29单/月");
+            driverLevelRepository.save(level1);
+
+            DriverLevel level2 = new DriverLevel();
+            level2.setLevelCode(2);
+            level2.setLevelName("银牌司机");
+            level2.setMinOrders(30);
+            level2.setMaxOrders(49);
+            level2.setCommissionRate(new BigDecimal("0.80"));
+            level2.setLevelBonus(new BigDecimal("200"));
+            level2.setDescription("月完成30-49单，提成80%");
+            driverLevelRepository.save(level2);
+
+            DriverLevel level3 = new DriverLevel();
+            level3.setLevelCode(3);
+            level3.setLevelName("金牌司机");
+            level3.setMinOrders(50);
+            level3.setMaxOrders(79);
+            level3.setCommissionRate(new BigDecimal("0.85"));
+            level3.setLevelBonus(new BigDecimal("500"));
+            level3.setDescription("月完成50-79单，提成85%");
+            driverLevelRepository.save(level3);
+
+            DriverLevel level4 = new DriverLevel();
+            level4.setLevelCode(4);
+            level4.setLevelName("钻石司机");
+            level4.setMinOrders(80);
+            level4.setMaxOrders(null);
+            level4.setCommissionRate(new BigDecimal("0.90"));
+            level4.setLevelBonus(new BigDecimal("1000"));
+            level4.setDescription("月完成80单以上，提成90%");
+            driverLevelRepository.save(level4);
+
+            System.out.println("初始化司机等级体系完成");
         }
 
         if (freightConfigRepository.count() == 0) {

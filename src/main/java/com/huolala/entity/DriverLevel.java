@@ -7,47 +7,33 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "salary")
-public class Salary {
+@Table(name = "driver_level")
+public class DriverLevel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "driver_id", nullable = false)
-    private Driver driver;
+    @Column(nullable = false, unique = true)
+    private Integer levelCode;
 
-    private String salaryMonth;
-
-    private Integer orderCount;
-
-    @Column(length = 50)
+    @Column(nullable = false, length = 50)
     private String levelName;
 
-    @Column(precision = 5, scale = 4)
+    @Column(nullable = false)
+    private Integer minOrders;
+
+    private Integer maxOrders;
+
+    @Column(nullable = false, precision = 5, scale = 4)
     private BigDecimal commissionRate;
-
-    @Column(precision = 10, scale = 2)
-    private BigDecimal baseSalary;
-
-    @Column(precision = 10, scale = 2)
-    private BigDecimal orderIncome;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal levelBonus;
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal bonus;
-
-    @Column(precision = 10, scale = 2)
-    private BigDecimal deduction;
-
-    @Column(precision = 10, scale = 2)
-    private BigDecimal totalSalary;
+    @Column(length = 200)
+    private String description;
 
     private Integer status;
-
-    private String remark;
 
     private LocalDateTime createTime;
 

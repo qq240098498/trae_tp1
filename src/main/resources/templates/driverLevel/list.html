@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司机等级管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/driverLevel}" class="active">等级体系</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/order/stats}">里程统计</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+                <li><a th:href="@{/report/monthly}">月度报表</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">司机等级体系</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="toolbar">
+                        <h3 style="margin: 0;">等级配置列表</h3>
+                        <a th:href="@{/driverLevel/add}" class="btn btn-primary">+ 新增等级</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>等级编码</th>
+                                <th>等级名称</th>
+                                <th>最低单量</th>
+                                <th>最高单量</th>
+                                <th>提成比例</th>
+                                <th>等级奖金</th>
+                                <th>状态</th>
+                                <th>说明</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="level : ${levels}">
+                                <td th:text="${level.levelCode}"></td>
+                                <td>
+                                    <span th:if="${level.levelCode == 1}" class="badge badge-bronze" th:text="${level.levelName}"></span>
+                                    <span th:if="${level.levelCode == 2}" class="badge badge-silver" th:text="${level.levelName}"></span>
+                                    <span th:if="${level.levelCode == 3}" class="badge badge-gold" th:text="${level.levelName}"></span>
+                                    <span th:if="${level.levelCode == 4}" style="background: linear-gradient(135deg, #b9f2ff, #00d4ff); padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: bold; color: #005577;" th:text="${level.levelName}"></span>
+                                    <span th:if="${level.levelCode > 4}" class="badge badge-dark" th:text="${level.levelName}"></span>
+                                </td>
+                                <td th:text="${level.minOrders} + '单'"></td>
+                                <td th:text="${level.maxOrders != null ? level.maxOrders + '单' : '不限'}"></td>
+                                <td style="color: #52c41a; font-weight: bold;" th:text="${#numbers.formatPercent(level.commissionRate, 1, 2)}"></td>
+                                <td style="color: #fa8c16; font-weight: bold;" th:text="'¥' + ${level.levelBonus}"></td>
+                                <td>
+                                    <span th:class="${level.status == 1 ? 'status-badge status-4' : 'status-badge status-9'}"
+                                          th:text="${level.status == 1 ? '启用' : '禁用'}"></span>
+                                </td>
+                                <td th:text="${level.description}"></td>
+                                <td>
+                                    <a th:href="@{/driverLevel/edit/{id}(id=${level.id})}" class="btn btn-sm btn-primary">编辑</a>
+                                    <a th:href="@{/driverLevel/delete/{id}(id=${level.id})}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除该等级吗？')">删除</a>
+                                </td>
+                            </tr>
+                            <tr th:if="${levels.isEmpty()}">
+                                <td colspan="9" style="text-align: center; color: #999;">暂无等级数据，请先配置司机等级</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <h3>等级体系说明</h3>
+                    <div style="color: #666; line-height: 1.8;">
+                        <p>司机等级体系根据月度订单完成量自动评定等级，不同等级享受不同的提成比例和等级奖金：</p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li><strong>等级评定</strong>：根据司机当月完成订单数量自动匹配等级</li>
+                            <li><strong>阶梯提成</strong>：等级越高，提成比例越高，司机收入越多</li>
+                            <li><strong>等级奖金</strong>：达到对应等级后，额外获得等级奖金</li>
+                            <li><strong>手动指定</strong>：支持在司机管理中手动指定司机等级，覆盖自动评定</li>
+                            <li><strong>薪资核算</strong>：薪资核算时按司机等级计算订单提成收入</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

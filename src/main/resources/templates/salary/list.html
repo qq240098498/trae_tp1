@@ -13,11 +13,13 @@
             <ul>
                 <li><a th:href="@{/}">控制台</a></li>
                 <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/driverLevel}">等级体系</a></li>
                 <li><a th:href="@{/vehicle}">车辆管理</a></li>
                 <li><a th:href="@{/freight}">运价配置</a></li>
                 <li><a th:href="@{/order}">订单管理</a></li>
                 <li><a th:href="@{/order/stats}">里程统计</a></li>
                 <li><a th:href="@{/salary}" class="active">薪资管理</a></li>
+                <li><a th:href="@{/report/monthly}">月度报表</a></li>
             </ul>
         </div>
         <div class="main">
@@ -64,9 +66,12 @@
                             <tr>
                                 <th>司机编号</th>
                                 <th>司机姓名</th>
+                                <th>等级</th>
                                 <th>订单数</th>
                                 <th>底薪</th>
+                                <th>提成率</th>
                                 <th>订单提成</th>
+                                <th>等级奖金</th>
                                 <th>奖金</th>
                                 <th>扣款</th>
                                 <th>实发工资</th>
@@ -77,16 +82,26 @@
                             <tr th:each="salary : ${salaries}">
                                 <td th:text="${salary.driver.driverNo}"></td>
                                 <td th:text="${salary.driver.name}"></td>
+                                <td>
+                                    <span th:if="${salary.levelName == '实习司机'}" class="badge badge-bronze" th:text="${salary.levelName}"></span>
+                                    <span th:if="${salary.levelName == '银牌司机'}" class="badge badge-silver" th:text="${salary.levelName}"></span>
+                                    <span th:if="${salary.levelName == '金牌司机'}" class="badge badge-gold" th:text="${salary.levelName}"></span>
+                                    <span th:if="${salary.levelName == '钻石司机'}" style="background: linear-gradient(135deg, #b9f2ff, #00d4ff); padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: bold; color: #005577;" th:text="${salary.levelName}"></span>
+                                    <span th:if="${salary.levelName != null and salary.levelName != '实习司机' and salary.levelName != '银牌司机' and salary.levelName != '金牌司机' and salary.levelName != '钻石司机'}" class="badge badge-dark" th:text="${salary.levelName}"></span>
+                                    <span th:if="${salary.levelName == null}" class="badge badge-warning">未定级</span>
+                                </td>
                                 <td th:text="${salary.orderCount}"></td>
                                 <td th:text="${salary.baseSalary}"></td>
+                                <td style="color: #52c41a;" th:text="${salary.commissionRate != null ? #numbers.formatPercent(salary.commissionRate, 1, 2) : '80%'}"></td>
                                 <td th:text="${salary.orderIncome}"></td>
+                                <td style="color: #722ed1;" th:text="${salary.levelBonus != null ? salary.levelBonus : '0'}"></td>
                                 <td th:text="${salary.bonus}"></td>
                                 <td th:text="${salary.deduction}"></td>
                                 <td style="color: #ff4d4f; font-weight: bold;" th:text="${salary.totalSalary}"></td>
                                 <td th:text="${salary.salaryMonth}"></td>
                             </tr>
                             <tr th:if="${salaries.isEmpty()}">
-                                <td colspan="9" style="text-align: center; color: #999;">暂无数据，请先核算薪资</td>
+                                <td colspan="12" style="text-align: center; color: #999;">暂无数据，请先核算薪资</td>
                             </tr>
                         </tbody>
                     </table>
@@ -94,9 +109,11 @@
                         <h4 style="margin-bottom: 10px; color: #52c41a;">薪资规则说明</h4>
                         <ul style="margin-left: 20px; color: #666; line-height: 1.8;">
                             <li>底薪：司机设定的基础工资</li>
-                            <li>订单提成：司机完成订单收入的80%</li>
-                            <li>奖金：月完成30单奖励200元，50单奖励500元</li>
-                            <li>实发工资 = 底薪 + 订单提成 + 奖金 - 扣款</li>
+                            <li>提成率：根据司机等级确定，等级越高提成率越高</li>
+                            <li>订单提成 = 总运费 x 提成率（阶梯提成）</li>
+                            <li>等级奖金：达到对应等级后获得的额外奖金</li>
+                            <li>奖金：月完成30单奖励200元，50单奖励500元，80单奖励1000元</li>
+                            <li>实发工资 = 底薪 + 订单提成 + 等级奖金 + 奖金 - 扣款</li>
                         </ul>
                     </div>
                 </div>

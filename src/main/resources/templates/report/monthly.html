@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>月度业绩报表</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/driverLevel}">等级体系</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/order/stats}">里程统计</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+                <li><a th:href="@{/report/monthly}" class="active">月度报表</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">月度业绩报表</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <h3>报表筛选</h3>
+                    <form th:action="@{/report/monthly}" method="get">
+                        <div class="filter-row">
+                            <div class="form-group">
+                                <label>统计月份</label>
+                                <input type="month" name="month" th:value="${month}">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">查询</button>
+                                <a th:href="@{/report/monthly}" class="btn btn-warning">重置</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${report.totalDrivers}">0</div>
+                        <div class="stat-label">司机总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: #52c41a;" th:text="${report.activeDrivers}">0</div>
+                        <div class="stat-label">活跃司机数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${report.totalOrders}">0</div>
+                        <div class="stat-label">总完成订单</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: #722ed1;" th:text="'¥' + ${report.totalFreight}">¥0</div>
+                        <div class="stat-label">总运费收入</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: #fa8c16;" th:text="'¥' + ${report.totalDriverIncome}">¥0</div>
+                        <div class="stat-label">司机提成总额</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: #ff4d4f; font-weight: bold;" th:text="'¥' + ${report.totalSalaryExpense}">¥0</div>
+                        <div class="stat-label">薪资支出总额</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="toolbar">
+                        <h3 style="margin: 0;">等级分布</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>等级名称</th>
+                                <th>司机人数</th>
+                                <th>提成比例</th>
+                                <th>平均薪资</th>
+                                <th>占比</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="dist : ${report.levelDistributions}">
+                                <td>
+                                    <span th:if="${dist.levelName == '实习司机'}" class="badge badge-bronze" th:text="${dist.levelName}"></span>
+                                    <span th:if="${dist.levelName == '银牌司机'}" class="badge badge-silver" th:text="${dist.levelName}"></span>
+                                    <span th:if="${dist.levelName == '金牌司机'}" class="badge badge-gold" th:text="${dist.levelName}"></span>
+                                    <span th:if="${dist.levelName == '钻石司机'}" style="background: linear-gradient(135deg, #b9f2ff, #00d4ff); padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: bold; color: #005577;" th:text="${dist.levelName}"></span>
+                                    <span th:if="${dist.levelName != '实习司机' and dist.levelName != '银牌司机' and dist.levelName != '金牌司机' and dist.levelName != '钻石司机'}" class="badge badge-dark" th:text="${dist.levelName}"></span>
+                                </td>
+                                <td th:text="${dist.driverCount} + '人'"></td>
+                                <td style="color: #52c41a;" th:text="${#numbers.formatPercent(dist.commissionRate, 1, 2)}"></td>
+                                <td style="color: #fa8c16;" th:text="'¥' + ${dist.avgIncome}"></td>
+                                <td>
+                                    <div style="background: #f0f0f0; border-radius: 3px; overflow: hidden; height: 20px;">
+                                        <div th:style="'width:' + ${report.totalDrivers > 0 ? (dist.driverCount * 100 / report.totalDrivers) : 0} + '%; background: #1890ff; height: 100%; text-align: center; color: white; font-size: 12px; line-height: 20px;'"
+                                             th:text="${report.totalDrivers > 0 ? #numbers.formatDecimal(dist.driverCount * 100.0 / report.totalDrivers, 1, 1) + '%' : '0%'}"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(report.levelDistributions)}">
+                                <td colspan="5" style="text-align: center; color: #999;">暂无等级分布数据</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="toolbar">
+                        <h3 style="margin: 0;">司机业绩明细 <span style="font-size: 14px; color: #999; font-weight: normal;" th:text="'(' + ${month} + ')'"></span></h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>司机编号</th>
+                                <th>司机姓名</th>
+                                <th>等级</th>
+                                <th>提成率</th>
+                                <th>订单数</th>
+                                <th>总里程</th>
+                                <th>总运费</th>
+                                <th>底薪</th>
+                                <th>订单提成</th>
+                                <th>等级奖金</th>
+                                <th>奖金</th>
+                                <th>实发工资</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="detail, iterStat : ${report.driverDetails}">
+                                <td>
+                                    <span th:if="${iterStat.index == 0}" class="badge badge-gold">1</span>
+                                    <span th:if="${iterStat.index == 1}" class="badge badge-silver">2</span>
+                                    <span th:if="${iterStat.index == 2}" class="badge badge-bronze">3</span>
+                                    <span th:if="${iterStat.index > 2}" th:text="${iterStat.index + 1}"></span>
+                                </td>
+                                <td th:text="${detail.driverNo}"></td>
+                                <td th:text="${detail.driverName}"></td>
+                                <td>
+                                    <span th:if="${detail.levelName == '实习司机'}" class="badge badge-bronze" th:text="${detail.levelName}"></span>
+                                    <span th:if="${detail.levelName == '银牌司机'}" class="badge badge-silver" th:text="${detail.levelName}"></span>
+                                    <span th:if="${detail.levelName == '金牌司机'}" class="badge badge-gold" th:text="${detail.levelName}"></span>
+                                    <span th:if="${detail.levelName == '钻石司机'}" style="background: linear-gradient(135deg, #b9f2ff, #00d4ff); padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: bold; color: #005577;" th:text="${detail.levelName}"></span>
+                                    <span th:if="${detail.levelName != '实习司机' and detail.levelName != '银牌司机' and detail.levelName != '金牌司机' and detail.levelName != '钻石司机'}" class="badge badge-dark" th:text="${detail.levelName}"></span>
+                                </td>
+                                <td style="color: #52c41a;" th:text="${#numbers.formatPercent(detail.commissionRate, 1, 2)}"></td>
+                                <td th:text="${detail.orderCount}"></td>
+                                <td th:text="${detail.totalMileage}"></td>
+                                <td th:text="'¥' + ${detail.totalFreight}"></td>
+                                <td th:text="'¥' + ${detail.baseSalary}"></td>
+                                <td style="color: #1890ff;" th:text="'¥' + ${detail.orderIncome}"></td>
+                                <td style="color: #722ed1;" th:text="${detail.levelBonus != null ? '¥' + detail.levelBonus : '¥0'}"></td>
+                                <td style="color: #fa8c16;" th:text="'¥' + ${detail.bonus}"></td>
+                                <td style="color: #ff4d4f; font-weight: bold;" th:text="'¥' + ${detail.totalSalary}"></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(report.driverDetails)}">
+                                <td colspan="13" style="text-align: center; color: #999;">暂无业绩数据</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>薪资汇总</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                        <div style="text-align: center; padding: 20px; background: #f6ffed; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #52c41a;" th:text="'¥' + ${report.totalBaseSalary}">¥0</div>
+                            <div style="color: #666; margin-top: 8px;">底薪总额</div>
+                        </div>
+                        <div style="text-align: center; padding: 20px; background: #e6f7ff; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #1890ff;" th:text="'¥' + ${report.totalDriverIncome}">¥0</div>
+                            <div style="color: #666; margin-top: 8px;">提成总额</div>
+                        </div>
+                        <div style="text-align: center; padding: 20px; background: #fff7e6; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #fa8c16;" th:text="'¥' + ${(report.totalLevelBonus != null ? report.totalLevelBonus : 0) + report.totalBonus}">¥0</div>
+                            <div style="color: #666; margin-top: 8px;">奖金总额(等级+业绩)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

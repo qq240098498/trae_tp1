@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>等级表单</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="logo">货拉拉管理系统</div>
+            <ul>
+                <li><a th:href="@{/}">控制台</a></li>
+                <li><a th:href="@{/driver}">司机管理</a></li>
+                <li><a th:href="@{/driverLevel}" class="active">等级体系</a></li>
+                <li><a th:href="@{/vehicle}">车辆管理</a></li>
+                <li><a th:href="@{/freight}">运价配置</a></li>
+                <li><a th:href="@{/order}">订单管理</a></li>
+                <li><a th:href="@{/order/stats}">里程统计</a></li>
+                <li><a th:href="@{/salary}">薪资管理</a></li>
+                <li><a th:href="@{/report/monthly}">月度报表</a></li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div>
+                    <span style="font-size: 18px; font-weight: 500;">等级表单</span>
+                </div>
+                <div class="user-info">
+                    <span>欢迎，管理员</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-danger">退出</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <h3 th:text="${level.id == null} ? '新增等级' : '编辑等级'">新增等级</h3>
+                    <form th:action="@{/driverLevel/save}" method="post" th:object="${level}">
+                        <input type="hidden" th:field="*{id}">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>等级编码 *</label>
+                                <input type="number" th:field="*{levelCode}" required placeholder="数字越大等级越高">
+                            </div>
+                            <div class="form-group">
+                                <label>等级名称 *</label>
+                                <input type="text" th:field="*{levelName}" required placeholder="如：实习司机、银牌司机">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>最低订单量 *</label>
+                                <input type="number" th:field="*{minOrders}" required placeholder="达到此单量可评定此等级">
+                            </div>
+                            <div class="form-group">
+                                <label>最高订单量</label>
+                                <input type="number" th:field="*{maxOrders}" placeholder="留空表示不限">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>提成比例 *</label>
+                                <input type="number" step="0.0001" th:field="*{commissionRate}" required placeholder="如0.80表示80%">
+                            </div>
+                            <div class="form-group">
+                                <label>等级奖金</label>
+                                <input type="number" step="0.01" th:field="*{levelBonus}" placeholder="达到此等级的额外奖金">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>说明</label>
+                            <input type="text" th:field="*{description}" placeholder="等级说明">
+                        </div>
+                        <div class="form-group">
+                            <label>状态</label>
+                            <select th:field="*{status}">
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                        <div class="actions">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <a th:href="@{/driverLevel}" class="btn btn-warning">返回</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

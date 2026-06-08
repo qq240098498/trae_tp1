@@ -1,6 +1,7 @@
 package com.huolala.controller;
 
 import com.huolala.entity.Salary;
+import com.huolala.service.DriverLevelService;
 import com.huolala.service.DriverService;
 import com.huolala.service.SalaryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,8 @@ public class SalaryController {
     private SalaryService salaryService;
     @Autowired
     private DriverService driverService;
+    @Autowired
+    private DriverLevelService driverLevelService;
 
     @GetMapping
     public String list(Model model, @RequestParam(required = false) String month) {
@@ -29,6 +32,7 @@ public class SalaryController {
         model.addAttribute("salaries", salaries);
         model.addAttribute("month", month);
         model.addAttribute("drivers", driverService.findAll());
+        model.addAttribute("levels", driverLevelService.findAll());
         return "salary/list";
     }
 

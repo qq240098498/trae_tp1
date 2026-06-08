@@ -37,6 +37,8 @@ public class Driver {
     @Column(precision = 10, scale = 2)
     private BigDecimal baseSalary;
 
+    private Integer levelCode;
+
     private Integer status;
 
     private LocalDateTime createTime;
