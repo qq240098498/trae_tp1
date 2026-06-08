@@ -60,6 +60,10 @@
                             <button type="submit" class="btn btn-primary">核算薪资</button>
                         </form>
                     </div>
+                    <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <a th:href="@{/driverLevel}" class="btn btn-primary" style="background: #722ed1;">🏅 等级薪资配置</a>
+                        <a th:href="@{/report/monthly}" class="btn btn-primary" style="background: #13c2c2;">📈 月度业绩报表</a>
+                    </div>
                     <div th:if="${error}" class="error" th:text="${error}"></div>
                     <table>
                         <thead>

@@ -36,7 +36,11 @@
                 <div class="card">
                     <div class="toolbar">
                         <h3 style="margin: 0;">等级配置列表</h3>
-                        <a th:href="@{/driverLevel/add}" class="btn btn-primary">+ 新增等级</a>
+                        <div style="display: flex; gap: 10px;">
+                            <a th:href="@{/salary}" class="btn btn-primary" style="background: #fa8c16;">💳 薪资管理</a>
+                            <a th:href="@{/report/monthly}" class="btn btn-primary" style="background: #13c2c2;">📈 月度报表</a>
+                            <a th:href="@{/driverLevel/add}" class="btn btn-primary">+ 新增等级</a>
+                        </div>
                     </div>
                     <table>
                         <thead>

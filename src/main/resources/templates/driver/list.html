@@ -36,7 +36,10 @@
                 <div class="card">
                     <div class="toolbar">
                         <h3 style="margin: 0;">司机列表</h3>
-                        <a th:href="@{/driver/add}" class="btn btn-primary">+ 新增司机</a>
+                        <div style="display: flex; gap: 10px;">
+                            <a th:href="@{/driverLevel}" class="btn btn-primary" style="background: #722ed1;">🏅 等级配置</a>
+                            <a th:href="@{/driver/add}" class="btn btn-primary">+ 新增司机</a>
+                        </div>
                     </div>
                     <table>
                         <thead>
